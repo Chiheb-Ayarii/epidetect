@@ -1,0 +1,14 @@
+# Exact versions used to produce every result in this repository (Python 3.11.9).
+# Install with:  python -m pip install -r requirements.txt ; python -m pip install -e .
+mne==1.13.2
+mne-bids==0.20.0
+numpy==2.4.6
+scipy==1.17.1
+scikit-learn==1.9.1
+pandas==3.1.1
+matplotlib==3.11.2
+PyWavelets==1.9.0
+h5py==3.16.0
+pytest==9.2.0
+ruff==0.17.5
+# Step 7 only (optional extension): sbi, torch -- pinned when that step starts.
