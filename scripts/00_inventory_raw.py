@@ -125,7 +125,8 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=REPO_ROOT / "docs" / "data_inventory.md")
     args = parser.parse_args()
     df = build_inventory(args.raw_dir)
-    args.out.write_text(to_markdown(df), encoding="utf-8")
+    # newline="\n": keep LF line endings on Windows too (matches .gitattributes).
+    args.out.write_text(to_markdown(df), encoding="utf-8", newline="\n")
     print(df.to_string(index=False))
 
 
