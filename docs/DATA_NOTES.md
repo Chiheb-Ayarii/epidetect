@@ -127,7 +127,10 @@ the resection indicate residual epileptogenic tissue. With 22 patients (8 not se
 AUC will have a very wide confidence interval. We will report it with a bootstrap CI and
 present it as exploratory.
 
-## 6. BIDS conversion plan (step 1)
+## 6. BIDS conversion (done in step 1)
+
+Produced by `scripts/01_convert_to_bids.py`. The table below was the plan written in step 0;
+the notes after it record what was actually done.
 
 | Item | BIDS mapping | Notes |
 |---|---|---|
@@ -140,7 +143,68 @@ present it as exploratory.
 | Electrode coordinates | `electrodes.tsv` **not written** | No coordinates are provided |
 | Licence, citation | `dataset_description.json` | CC BY-SA 4.0, Boran et al. 2019 |
 
-## 7. Summary of consequences for the project
+What was actually done:
+
+- **FR channel.** `mne-bids` 0.20 writes `events.tsv` **without** the channel of
+  channel-specific annotations (checked on a toy example). We therefore rewrite `events.tsv` with
+  an extra `channel` column, described in `events.json`. `epidetect.io.read_bids_recording`
+  rebuilds channel-specific annotations from it. Recordings without FRs still get an empty
+  `events.tsv`.
+- **Sidecar fields.** `mne-bids` wrote `Manufacturer = "Brain Products"`, which is the name of
+  the *file format* writer. It also wrote `iEEGReference = "n/a"`. Both are overwritten with
+  the real amplifier (Natus Nicolet C-Series), `bipolar`, and the 1–800 Hz hardware filters. The
+  hardware filters also go into `channels.tsv` (`low_cutoff`, `high_cutoff`).
+- **Electrode coordinates.** `mne-bids` writes `electrodes.tsv` with `n/a` coordinates and a
+  coordinate system of `Other`. This is the honest encoding of "unknown".
+- **Verification.** Every recording is read back from BIDS and compared with the NIX source:
+  same channels, same FRs, maximum absolute error 3.9e-4 uV caused by float32 storage
+  (`results/bids_conversion.csv`).
+- **Not yet done.** The official BIDS validator was not run in this environment. Command:
+  `npx bids-validator@1.15.0 data/bids`.
+
+## 7. Findings of the step-1 quality control
+
+Produced by `scripts/02_quality_control.py`. Outputs: `results/qc_*.csv`, `figures/qc_*.png`.
+
+1. **Duplicated recordings in the source data.** The pre-resection recordings of patients
+   **12, 15 and 17** are **byte-identical**: 4 channels each, 122.2 s each, same samples. These
+   are three different patients (different ages, etiologies and resection areas), so at most
+   one of the three recordings can be genuine, and we cannot tell which one. Their
+   post-resection recordings are distinct. Handling:
+   - the three pre-resection recordings stay in BIDS (faithful conversion), with every channel
+     marked `bad` and the reason given;
+   - they are listed in `[data] excluded_recordings` of `configs/default.toml` and excluded
+     from every analysis;
+   - the QC script fails if an exclusion is not backed by the duplicate check
+     (`results/qc_duplicates.csv`).
+
+   Cost: none of the three has FR markings. To report to the dataset authors.
+2. **Channel flags.** With 3 recordings excluded, 429 channels remain. 17 of them are flagged
+   (`results/qc_channels.csv`). Almost all are "250–500 Hz background outliers", i.e. a high
+   noise floor in the fast-ripple band. The 250–500 Hz background is estimated with a
+   *median* Welch PSD, so it is not driven by FRs: its robust z-score is uncorrelated with the
+   channel's FR count. Relative criteria are used only for recordings with at least 8 channels,
+   so strips only get the absolute "flat channel" check. Flagged channels carry 18 reference
+   FRs, all post-resection (patients 06 and 08).
+3. **Bad-channel policy for steps 4–5.** The main analysis uses **all** channels of
+   non-excluded recordings, because the authors marked FRs on some flagged channels. A
+   **sensitivity analysis** repeats it without flagged channels.
+4. **Line noise.** The bipolar montage removes most of the 50 Hz component: median harmonic
+   peaks are usually below 6 dB (`figures/qc_line_noise.png`). Exceptions:
+   - P14 pre-resection has **only even** harmonics (100–400 Hz, up to 22 dB);
+   - P20 post-resection has **only odd** harmonics (150–450 Hz, 12–15 dB)
+     (`figures/qc_harmonics_examples.png`).
+
+   Several harmonics fall inside the ripple and FR bands. Whether to notch-filter them is
+   decided in step 3.
+5. **Amplifier noise floor.** In many recordings the PSD becomes flat (white) above roughly
+   150–250 Hz (`figures/qc_psd_pre.png`, `figures/qc_psd_post.png`). In the FR band, events
+   must therefore stand out from electronic noise rather than from brain background. The
+   simulator (step 2) must reproduce this.
+6. **Aperiodic exponent.** On analysed channels, the 2–40 Hz exponent β has a median of 2.55
+   (IQR 2.22–2.88). This guides the simulator's 1/f^β background.
+
+## 8. Summary of consequences for the project
 
 1. Real-data evaluation covers **fast ripples only**. Ripples are evaluated on simulations only.
 2. The reference markings come from an automatic detector plus visual validation, so the
@@ -151,3 +215,5 @@ present it as exploratory.
 4. Patient imbalance (patient 06 ≈ 59% of the FRs) requires per-patient metrics and a
    patient-level bootstrap.
 5. The montage is bipolar only, sampled at 2000 Hz, with a 1–800 Hz hardware passband.
+6. The pre-resection recordings of patients 12, 15 and 17 are duplicates and are excluded.
+7. QC-flagged channels are kept in the main analysis, and a sensitivity analysis excludes them.
