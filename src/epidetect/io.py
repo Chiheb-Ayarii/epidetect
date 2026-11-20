@@ -205,6 +205,7 @@ def _update_ieeg_sidecar(
             "SoftwareFilters": "n/a",
             "ElectricalStimulation": False,
         },
+        verbose=False,
     )
 
 
@@ -307,6 +308,8 @@ def write_dataset_description(bids_root: Path) -> None:
         name="Intraoperative ECoG pre- and post-resection with fast ripple markings (BIDS)",
         dataset_type="raw",
         data_license="CC-BY-SA-4.0",
+        # Authors of the source data as given in its citation (the full list is in the paper).
+        authors=["Boran E.", "Ramantani G.", "Krayenbuehl N.", "and others (see HowToAcknowledge)"],
         how_to_acknowledge=(
             "Cite Boran E. et al., High-density ECoG improves the detection of high frequency "
             "oscillations that predict seizure outcome, Clin Neurophysiol 130(10):1882-1888, 2019."
