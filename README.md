@@ -38,6 +38,8 @@ attribution.
 | `scripts/03_calibrate_simulator.py` | background spectrum and spike sharpness fitted on the real data: `results/background_fit*.csv`, `results/spike_*.csv`, `figures/sim_*_calibration.png` |
 | `scripts/04_simulation_examples.py` | `figures/sim_examples.png`, `figures/sim_snr_levels.png`, `results/sim_example_truth.csv` |
 | `scripts/05_spike_filter_demo.py` | why a filtered spike looks like an HFO: `figures/false_hfo_demo.png`, `results/false_hfo_demo.csv` |
+| `scripts/06_notch_decision.py` | effect of notch-filtering mains harmonics on real detections: `results/notch_decision.csv` (~6 min) |
+| `scripts/07_detector_examples.py` | the three detectors on four typical simulated situations: `figures/detector_examples.png` |
 
 The BIDS output passes the official validator (requires Node.js):
 
@@ -70,3 +72,14 @@ This section is completed at every step; the final README discusses each point w
   constants, slow wave) is a modelling choice.
 - The real anti-aliasing roll-off above 500 Hz and mains interference are not simulated.
 - One channel per simulation: no spatial correlation between channels.
+
+**Detectors** (behaviour observed on simulations in step 3, quantified in step 4)
+- Energy detector: sharp spikes produce detections, especially in the ripple band, where a
+  spike's spectrum is strong. No threshold removes them without losing HFOs.
+- Wavelet detector: its spike-rejection test also rejects HFOs riding on a spike, which look
+  like a spike column with a bump in the time–frequency map.
+- ML detector: its most important fast-ripple feature is the frequency. This may partly
+  reflect a simulator property (spikes ring near the lower edge of the band) and must be
+  checked on real data.
+- No notch filter is applied: mains harmonics add only about 1–3 % of detections on the
+  affected real channels (`results/notch_decision.csv`).
