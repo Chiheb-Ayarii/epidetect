@@ -78,6 +78,16 @@ def test_channel_qc_flags_flat_and_noisy_channels(rng: np.random.Generator) -> N
     assert "flat" in table.loc[2, "reasons"]
 
 
+def test_repeated_samples_flagged_even_with_few_channels(rng: np.random.Generator) -> None:
+    """A channel sampled at fs/2 and duplicated (zero-order hold) is flagged."""
+    data = rng.normal(0, 10, (3, N))
+    data[1] = np.repeat(rng.normal(0, 10, N // 2), 2)
+    assert qc.repeated_sample_fraction(data)[1] == pytest.approx(0.5, abs=1e-3)
+    table, _, _ = qc.channel_qc(data, FS, ["1-2", "2-3", "3-4"])
+    assert table.bad.tolist() == [False, True, False]
+    assert "repeated samples" in table.loc[1, "reasons"]
+
+
 def test_relative_criteria_skipped_with_few_channels(rng: np.random.Generator) -> None:
     data = rng.normal(0, 10, (3, N))
     data[1] *= 100  # would be an outlier, but 3 channels are too few to judge

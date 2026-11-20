@@ -43,6 +43,7 @@ class QCParams:
     robust_z_threshold: float = 5.0
     min_channels_for_relative_qc: int = 4
     flat_std_uv: float = 1.0
+    max_repeated_fraction: float = 0.1
 
     @classmethod
     def from_config(cls, qc_cfg: dict[str, Any], line_freq_hz: float) -> QCParams:
@@ -139,6 +140,15 @@ def aperiodic_slope(freqs: np.ndarray, psd: np.ndarray, params: QCParams) -> np.
     return -slopes
 
 
+def repeated_sample_fraction(data_uv: np.ndarray) -> np.ndarray:
+    """Fraction of consecutive samples that are exactly equal, per channel.
+
+    ~0 for a genuinely sampled analogue signal; 0.5 for a signal up-sampled by 2 by repeating
+    every sample.
+    """
+    return (np.diff(data_uv, axis=-1) == 0).mean(axis=-1)
+
+
 def robust_z(values: np.ndarray) -> np.ndarray:
     """Robust z-score: (x - median) / (1.4826 * MAD). Returns zeros if the MAD is 0."""
     median = np.median(values)
@@ -157,9 +167,14 @@ def channel_qc(
     aperiodic_beta, line_<f>_db`` for every harmonic, ``n_harmonics_present``, robust z-scores,
     ``bad`` and ``reasons``.
 
-    A channel is flagged ``bad`` if (absolute criterion) its standard deviation is below
-    ``flat_std_uv``, or (relative criteria, only with at least ``min_channels_for_relative_qc``
+    A channel is flagged ``bad`` if (absolute criteria) its standard deviation is below
+    ``flat_std_uv`` or more than ``max_repeated_fraction`` of its consecutive samples are
+    identical, or (relative criteria, only with at least ``min_channels_for_relative_qc``
     channels) its broadband or fast-ripple background power is a robust-z outlier.
+
+    Repeated samples: a channel recorded at fs/2 and up-sampled by repeating each sample
+    (zero-order hold) has 50 % identical consecutive samples. Its effective Nyquist frequency
+    is fs/4 (500 Hz here), so it cannot carry fast ripples although its file says 2000 Hz.
     Line noise is *reported* but not used to flag: it is handled later by filtering.
 
     Two PSDs are used: the median PSD (background, robust to FRs) for band powers and the 1/f
@@ -178,6 +193,7 @@ def channel_qc(
         {
             "channel": ch_names,
             "std_uv": data_uv.std(axis=1),
+            "repeated_fraction": repeated_sample_fraction(data_uv),
             "log10_power_broad": np.log10(band_power(freqs, psd, params.broadband_hz)),
             "log10_power_ripple": np.log10(band_power(freqs, psd, params.ripple_band_hz)),
             "log10_power_fr": np.log10(band_power(freqs, psd, params.fast_ripple_band_hz)),
@@ -197,6 +213,11 @@ def channel_qc(
         why = []
         if row.std_uv < params.flat_std_uv:
             why.append("flat")
+        if row.repeated_fraction > params.max_repeated_fraction:
+            why.append(
+                f"repeated samples ({row.repeated_fraction:.0%} identical consecutive samples: "
+                "effective sampling rate below fs)"
+            )
         if relative and abs(row.z_broad) > params.robust_z_threshold:
             why.append(f"broadband power outlier (z={row.z_broad:+.1f})")
         if relative and abs(row.z_fr) > params.robust_z_threshold:
