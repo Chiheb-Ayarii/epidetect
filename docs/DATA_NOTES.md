@@ -181,13 +181,20 @@ Produced by `scripts/02_quality_control.py`. Outputs: `results/qc_*.csv`, `figur
      (`results/qc_duplicates.csv`).
 
    Cost: none of the three has FR markings.
-2. **Channel flags.** With 3 recordings excluded, 429 channels remain. 17 of them are flagged
+2. **Channel flags.** With 3 recordings excluded, 429 channels remain. 18 of them are flagged
    (`results/qc_channels.csv`). Almost all are "250–500 Hz background outliers", i.e. a high
    noise floor in the fast-ripple band. The 250–500 Hz background is estimated with a
    *median* Welch PSD, so it is not driven by FRs: its robust z-score is uncorrelated with the
    channel's FR count. Relative criteria are used only for recordings with at least 8 channels,
-   so strips only get the absolute "flat channel" check. Flagged channels carry 18 reference
-   FRs, all post-resection (patients 06 and 08).
+   so strips only get the absolute checks (flat channel, repeated samples). Flagged channels
+   carry 18 reference FRs, all post-resection (patients 06 and 08).
+   - **Repeated samples (found in step 2).** In **P22 pre-resection, channel 3-4**, 50 % of
+     consecutive samples are identical: every sample appears twice. The channel was sampled
+     at 1000 Hz and duplicated to 2000 Hz (zero-order hold). Its effective Nyquist frequency
+     is 500 Hz, so it cannot carry fast ripples. Every other channel has less than 0.5 %
+     repeated samples. An absolute QC criterion (`max_repeated_fraction = 0.1`) now flags it.
+     It was found because it produced absurd values (FR-band ratio ~10^4) during the spike
+     calibration of step 2.
 3. **Bad-channel policy for steps 4–5.** The main analysis uses **all** channels of
    non-excluded recordings, because the authors marked FRs on some flagged channels. A
    **sensitivity analysis** repeats it without flagged channels.
