@@ -83,6 +83,7 @@ class SpikeParams:
     slow_wave_ratio: tuple[float, float] = (0.2, 0.5)
     slow_wave_delay_ms: tuple[float, float] = (40.0, 80.0)
     slow_wave_sigma_ms: tuple[float, float] = (20.0, 40.0)
+    apex_sigma_ms: tuple[float, float] = (1.1, 1.6)
 
 
 @dataclass(frozen=True)
@@ -240,16 +241,22 @@ def spike_waveform(
     slow_wave_ratio: float,
     slow_wave_delay_s: float,
     slow_wave_sigma_s: float,
+    apex_sigma_s: float = 0.0,
 ) -> np.ndarray:
     """Cusp-shaped spike followed by a slow wave of opposite polarity (centred array).
 
-    ``amplitude * [exp(t / tau_rise) for t < 0, exp(-t / tau_decay) for t >= 0]
-    - amplitude * ratio * exp(-(t - delay)^2 / (2 sigma^2))``.
-    The kink at t = 0 is what gives the spike energy at hundreds of Hz.
+    ``amplitude * cusp(t) - amplitude * ratio * exp(-(t - delay)^2 / (2 sigma^2))`` where
+    ``cusp`` rises as ``exp(t / tau_rise)`` and decays as ``exp(-t / tau_decay)``.
+
+    The kink of a pure cusp at t = 0 gives a 1/f^2 spectrum, i.e. energy at hundreds of Hz.
+    Real spikes have a rounded apex: ``apex_sigma_s > 0`` convolves the cusp with a Gaussian of
+    that width, which multiplies its spectrum by ``exp(-(2 pi f sigma)^2 / 2)``. The cusp is then
+    rescaled so that its peak is still ``amplitude_uv``. This single parameter controls how
+    strongly a spike "rings" after band-pass filtering (calibrated on real data).
     """
-    left = SUPPORT_DECAY_CONSTANTS * tau_rise_s
+    left = SUPPORT_DECAY_CONSTANTS * tau_rise_s + SUPPORT_SIGMAS * apex_sigma_s
     right = max(
-        SUPPORT_DECAY_CONSTANTS * tau_decay_s,
+        SUPPORT_DECAY_CONSTANTS * tau_decay_s + SUPPORT_SIGMAS * apex_sigma_s,
         slow_wave_delay_s + SUPPORT_SIGMAS * slow_wave_sigma_s,
     )
     half = int(np.ceil(max(left, right) * fs))  # symmetric support so the centre is the middle
@@ -257,6 +264,12 @@ def spike_waveform(
     cusp = np.where(
         t < 0, np.exp(np.minimum(t, 0) / tau_rise_s), np.exp(-np.maximum(t, 0) / tau_decay_s)
     )
+    if apex_sigma_s > 0:
+        k = np.arange(-int(np.ceil(SUPPORT_SIGMAS * apex_sigma_s * fs)), 0)
+        k = np.concatenate([k, [0], -k[::-1]]) / fs
+        kernel = np.exp(-0.5 * (k / apex_sigma_s) ** 2)
+        cusp = np.convolve(cusp, kernel / kernel.sum(), mode="same")
+        cusp /= np.abs(cusp).max()
     slow = np.exp(-0.5 * ((t - slow_wave_delay_s) / slow_wave_sigma_s) ** 2)
     return amplitude_uv * (cusp - slow_wave_ratio * slow)
 
@@ -276,6 +289,7 @@ def _draw_spike(
         rng.uniform(*sp.slow_wave_ratio),
         rng.uniform(*sp.slow_wave_delay_ms) / 1000,
         rng.uniform(*sp.slow_wave_sigma_ms) / 1000,
+        apex_sigma_s=rng.uniform(*sp.apex_sigma_ms) / 1000,
     )
     return wave, amplitude, tau_rise, tau_decay
 

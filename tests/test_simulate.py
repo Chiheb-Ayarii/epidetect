@@ -128,14 +128,15 @@ def test_spike_waveform_shape() -> None:
     assert wave[centre + int(0.06 * FS)] > 0  # slow wave of opposite polarity
 
 
-def test_spikes_create_false_hfos_after_filtering(params: SimulationParams) -> None:
-    """Isolated spikes (no HFO) still produce 250-500 Hz bursts above the background."""
+def _median_spike_ringing(params: SimulationParams, apex_ms: tuple[float, float]) -> float:
+    """Median of max |250-500 Hz| near isolated spikes, in units of band background std."""
     p = params.replace(
         events={
             "rate_ripple_per_min": 0.0,
             "rate_fast_ripple_per_min": 0.0,
             "rate_spike_per_min": 12.0,
-        }
+        },
+        spike={"apex_sigma_ms": apex_ms},
     )
     sim = simulate.simulate_from_seed(p, 10)
     filtered = filters.bandpass(sim.signal_uv, FS, p.events.fast_ripple_band_hz)
@@ -144,7 +145,20 @@ def test_spikes_create_false_hfos_after_filtering(params: SimulationParams) -> N
         np.abs(filtered[int((r.center_s - 0.02) * FS) : int((r.center_s + 0.02) * FS)]).max()
         for r in sim.events.itertuples()
     ]
-    assert np.median(peaks) > 3 * bg_std
+    return float(np.median(peaks) / bg_std)
+
+
+def test_pure_cusp_spikes_create_strong_false_hfos(params: SimulationParams) -> None:
+    """Isolated spikes (no HFO) with a sharp apex produce large 250-500 Hz bursts."""
+    assert _median_spike_ringing(params, (0.0, 0.0)) > 20
+
+
+def test_rounded_apex_reduces_ringing(params: SimulationParams) -> None:
+    sharp = _median_spike_ringing(params, (0.0, 0.0))
+    calibrated = _median_spike_ringing(params, (1.1, 1.6))
+    smooth = _median_spike_ringing(params, (3.0, 3.0))
+    assert sharp > 5 * calibrated > 5 * 1.0
+    assert calibrated > smooth
 
 
 def test_impossible_rate_raises() -> None:
