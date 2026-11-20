@@ -35,6 +35,9 @@ attribution.
 | `scripts/00_inventory_raw.py` | `docs/data_inventory.md`, a read-only inventory of the raw NIX files |
 | `scripts/01_convert_to_bids.py` | `data/bids/` (BIDS iEEG, git-ignored), `results/bids_conversion.csv` |
 | `scripts/02_quality_control.py` | `results/qc_*.csv`, `figures/qc_*.png`, bad channels marked in BIDS |
+| `scripts/03_calibrate_simulator.py` | background spectrum and spike sharpness fitted on the real data: `results/background_fit*.csv`, `results/spike_*.csv`, `figures/sim_*_calibration.png` |
+| `scripts/04_simulation_examples.py` | `figures/sim_examples.png`, `figures/sim_snr_levels.png`, `results/sim_example_truth.csv` |
+| `scripts/05_spike_filter_demo.py` | why a filtered spike looks like an HFO: `figures/false_hfo_demo.png`, `results/false_hfo_demo.csv` |
 
 The BIDS output passes the official validator (requires Node.js):
 
