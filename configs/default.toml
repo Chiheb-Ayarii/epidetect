@@ -1,0 +1,46 @@
+# EpiDetect default parameters. Every script reads this file; nothing is hard-coded elsewhere.
+# Paths are relative to the repository root.
+
+[paths]
+raw_dir = "data/raw"
+bids_root = "data/bids"
+figures_dir = "figures"
+results_dir = "results"
+
+[recording]
+# Zurich: European mains frequency.
+line_freq_hz = 50.0
+# Hardware passband of the Nicolet C-Series amplifier, read from the NIX metadata.
+hardware_highpass_hz = 1.0
+hardware_lowpass_hz = 800.0
+
+[bids]
+task = "intraop"
+datatype = "ieeg"
+# BrainVision stores float32 samples: no rescaling to 16-bit integers as EDF would need.
+format = "BrainVision"
+
+[qc]
+# Welch PSD: 1 s Hann windows -> 1 Hz frequency resolution; 50 % overlap is the standard choice.
+welch_window_s = 1.0
+welch_overlap = 0.5
+# Bands used for per-channel power (Hz).
+broadband_hz = [1.0, 500.0]
+ripple_band_hz = [80.0, 250.0]
+fast_ripple_band_hz = [250.0, 500.0]
+# Aperiodic (1/f) slope fitted in log-log space on this range, line-noise bins excluded.
+aperiodic_fit_hz = [2.0, 40.0]
+# Line noise: power within +/- half_width of k*50 Hz versus flanks [flank_inner, flank_outer] away.
+line_half_width_hz = 1.0
+line_flank_inner_hz = 2.0
+line_flank_outer_hz = 5.0
+# Highest harmonic inspected: 450 Hz = 9th harmonic, last one inside the FR band (< 500 Hz).
+line_max_freq_hz = 450.0
+# A harmonic is called "present" when it exceeds its flanks by this many dB.
+line_present_db = 6.0
+# Robust z-score threshold for relative channel flags (|z| > 5 ~ far beyond normal variation).
+robust_z_threshold = 5.0
+# Relative (robust z) criteria are meaningless with very few channels.
+min_channels_for_relative_qc = 4
+# Absolute criterion: a channel with std below this (uV) is considered flat / disconnected.
+flat_std_uv = 1.0

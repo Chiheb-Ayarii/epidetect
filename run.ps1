@@ -30,7 +30,8 @@ switch ($Task) {
     "inventory" { Invoke-Inventory }
     "run"       { Invoke-Run }
     "test"      { & $Py -m pytest }
-    "lint"      { & $Py -m ruff check src tests scripts }
+    "lint"      { & $Py -m ruff check src tests scripts; & $Py -m ruff format --check src tests scripts }
+    "format"    { & $Py -m ruff format src tests scripts }
     "clean"     {
         Get-ChildItem $PSScriptRoot -Recurse -Directory -Include "__pycache__", ".pytest_cache", ".ruff_cache" |
             Where-Object { $_.FullName -notlike "*\.venv\*" } | Remove-Item -Recurse -Force

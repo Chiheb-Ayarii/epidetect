@@ -21,6 +21,7 @@ dependencies = [
     "matplotlib>=3.9",
     "PyWavelets>=1.6",
     "h5py>=3.11",
+    "pybv>=0.7.3",
 ]
 
 [project.optional-dependencies]

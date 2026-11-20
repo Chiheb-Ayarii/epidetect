@@ -16,6 +16,8 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install -e .
       - name: Lint
-        run: ruff check src tests scripts
+        run: |
+          ruff check src tests scripts
+          ruff format --check src tests scripts
       - name: Test (tests never need the real dataset)
         run: pytest
