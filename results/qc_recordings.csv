@@ -42,4 +42,4 @@ patient,session,n_channels,n_flagged,median_std_uv,median_aperiodic_beta,n_fr,ex
 21,post,6,0,109.53,3.128,1,False,11.641
 21,pre,6,0,94.459,2.527,0,False,2.755
 22,post,3,0,149.642,2.333,0,False,5.631
-22,pre,3,0,90.438,2.668,0,False,5.668
+22,pre,3,1,90.438,2.668,0,False,5.668
