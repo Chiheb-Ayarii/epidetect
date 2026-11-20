@@ -3,8 +3,15 @@
 from epidetect.detectors.base import (
     BAND_NAMES,
     DETECTION_COLUMNS,
+    bands_from_config,
     detect_channels,
     empty_detections,
 )
 
-__all__ = ["BAND_NAMES", "DETECTION_COLUMNS", "detect_channels", "empty_detections"]
+__all__ = [
+    "BAND_NAMES",
+    "DETECTION_COLUMNS",
+    "bands_from_config",
+    "detect_channels",
+    "empty_detections",
+]

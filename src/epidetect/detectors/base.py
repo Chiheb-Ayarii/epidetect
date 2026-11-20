@@ -22,6 +22,11 @@ DETECTION_COLUMNS = ["onset_s", "offset_s", "peak_s", "band", "freq_hz", "score"
 BAND_NAMES = ("ripple", "fast_ripple")
 
 
+def bands_from_config(det_cfg: dict[str, Any]) -> dict[str, tuple[float, float]]:
+    """``{"ripple": (80, 250), "fast_ripple": (250, 500)}`` from ``[detectors.bands]``."""
+    return {name: (float(low), float(high)) for name, (low, high) in det_cfg["bands"].items()}
+
+
 def empty_detections(extra_columns: tuple[str, ...] = ()) -> pd.DataFrame:
     """An empty detection table with the standard columns."""
     return pd.DataFrame(columns=[*DETECTION_COLUMNS, *extra_columns])

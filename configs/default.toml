@@ -127,3 +127,59 @@ spike_sim_duration_s = 300.0
 spike_sim_rate_per_min = 30.0
 apex_low_grid_ms = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2]
 apex_high_grid_ms = [1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0]
+
+[detectors]
+# No detection is searched within this margin of either end (filter edge transients).
+edge_margin_s = 1.0
+
+[detectors.bands]
+ripple = [80.0, 250.0]
+fast_ripple = [250.0, 500.0]
+
+[detectors.energy]
+# Staba et al. 2002 adapted: 3 ms RMS, 6 ms minimum, 10 ms merge gap, >= 6 rectified peaks
+# above 3 SD. Thresholds use median + k * robust std (MAD) instead of mean + k * SD.
+# threshold_k is tuned in step 4 on training simulations only.
+filter_order = 4
+rms_window_ms = 3.0
+threshold_k = 5.0
+merge_gap_ms = 10.0
+min_duration_ms = 6.0
+min_peaks = 6
+peak_threshold_k = 3.0
+
+[detectors.wavelet]
+# Morlet with 6 cycles: sigma_f = f / 6 (constant Q); 60 log-spaced frequencies, 30-600 Hz.
+freq_min_hz = 30.0
+freq_max_hz = 600.0
+n_freqs = 60
+n_cycles = 6.0
+# Chunks keep memory small; the padding exceeds the longest wavelet (4 sigma_t ~ 130 ms at 30 Hz).
+chunk_s = 10.0
+pad_s = 0.5
+# Peak of the whitened (robust z-score) map. 8 gave 0 detection in 300 s of simulated
+# background (6 gave 3); tuned in step 4 on training simulations only.
+z_threshold = 8.0
+# Event extent: where z stays above this fraction of the peak, at the peak frequency.
+extent_ratio = 0.5
+# Oscillation if min z in [0.5, 0.65] x f_peak is below valley_ratio * z_peak (spikes: ~0.6-0.9,
+# isolated HFOs: ~0, measured on simulations in step 3).
+valley_ratio = 0.5
+valley_low_fraction = 0.5
+valley_high_fraction = 0.65
+peak_neighbourhood_ms = 20.0
+peak_neighbourhood_freqs = 5
+
+[detectors.ml]
+# Permissive candidates (energy detector with a low threshold and fewer required peaks).
+candidate_threshold_k = 3.0
+candidate_min_peaks = 4
+n_estimators = 300
+min_samples_leaf = 3
+probability_threshold = 0.5
+random_state = 0
+
+[features]
+low_band_hz = [20.0, 80.0]
+context_ms = 50.0
+filter_order = 4
