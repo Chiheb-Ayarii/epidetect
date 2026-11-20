@@ -1,0 +1,9 @@
+signal,filter,band_hz,spectrum_300hz_rel,peak_uv,duration_50pct_ms,cycles_50pct,duration_10pct_ms,cycles_10pct,duration_2pct_ms,cycles_2pct
+cusp spike (sharp apex),Butterworth N=4,250-500,0.01241,26.08,4.5,1,14.5,4,29.5,8
+rounded spike (apex 1.35 ms),Butterworth N=4,250-500,0.0004873,1.103,10,2.5,23.5,6,37.5,9.5
+smooth Gaussian spike,Butterworth N=4,250-500,6.46e-17,5.719e-05,15.5,1,28.5,3,37.5,3
+"true fast ripple (300 Hz, 5 uV)",Butterworth N=4,250-500,1,4.424,11.5,3.5,18.5,5.5,31.5,8.5
+cusp spike (sharp apex),Butterworth N=4,250-350,,14.38,11.5,3,33.5,9,57.5,15
+cusp spike (sharp apex),Butterworth N=4,280-320,,5.632,28,8,81.5,23,141,40
+cusp spike (sharp apex),Butterworth N=4,295-305,,1.403,111.5,33,325,96.5,562,166.5
+cusp spike (sharp apex),FIR 257 taps,250-500,,24.74,5.5,2,28.5,7.5,79,20.5
