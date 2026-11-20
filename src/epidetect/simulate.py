@@ -71,6 +71,9 @@ class EventParams:
     p_hfo_on_spike: float = 0.3
     snr_db: float = 10.0
     snr_jitter_db: float = 0.0
+    # Optional empirical frequencies (Hz): if non-empty, fast-ripple frequencies are drawn
+    # from these values (with replacement) instead of uniformly over the band.
+    fast_ripple_freqs_hz: tuple[float, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -373,7 +376,10 @@ def simulate(params: SimulationParams, rng: np.random.Generator) -> Simulation:
             "center_s": centre_index / p.fs_hz,
         }
         if kind in HFO_KINDS:
-            freq = rng.uniform(*bands[kind])
+            if kind == "fast_ripple" and ev.fast_ripple_freqs_hz:
+                freq = float(rng.choice(ev.fast_ripple_freqs_hz))
+            else:
+                freq = rng.uniform(*bands[kind])
             n_cycles = rng.uniform(*ev.n_cycles)
             unit = hfo_waveform(p.fs_hz, freq, n_cycles, phase=rng.uniform(0, 2 * np.pi))
             snr_db = ev.snr_db + ev.snr_jitter_db * rng.standard_normal()

@@ -173,3 +173,12 @@ def test_impossible_rate_raises() -> None:
         simulate.sample_event_centres(
             np.random.default_rng(0), 60.0, 1.0, rate_per_s=3.0, min_gap_s=0.5
         )
+
+
+def test_empirical_fast_ripple_frequencies(params: SimulationParams) -> None:
+    freqs = (260.0, 270.0, 280.0)
+    sim = simulate.simulate_from_seed(params.replace(events={"fast_ripple_freqs_hz": freqs}), 14)
+    fr = sim.events[sim.events.kind == "fast_ripple"]
+    assert len(fr) > 0 and set(fr.freq_hz.round(6)) <= set(freqs)
+    ripples = sim.events[sim.events.kind == "ripple"]
+    assert ripples.freq_hz.between(*params.events.ripple_band_hz).all()
