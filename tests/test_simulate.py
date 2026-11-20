@@ -161,6 +161,13 @@ def test_rounded_apex_reduces_ringing(params: SimulationParams) -> None:
     assert calibrated > smooth
 
 
+def test_background_only_simulation(params: SimulationParams) -> None:
+    rates = {"rate_ripple_per_min": 0.0, "rate_fast_ripple_per_min": 0.0, "rate_spike_per_min": 0.0}
+    sim = simulate.simulate_from_seed(params.replace(events=rates), 13)
+    assert sim.events.empty
+    np.testing.assert_array_equal(sim.signal_uv, sim.background_uv)
+
+
 def test_impossible_rate_raises() -> None:
     with pytest.raises(ValueError, match="impossible"):
         simulate.sample_event_centres(

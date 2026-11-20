@@ -359,7 +359,9 @@ def simulate(params: SimulationParams, rng: np.random.Generator) -> Simulation:
     centres = sample_event_centres(
         rng, p.duration_s, p.edge_margin_s, rates.sum() / 60, ev.min_gap_s
     )
-    kinds = rng.choice(EVENT_KINDS, size=len(centres), p=rates / rates.sum())
+    # With all rates at 0, sample_event_centres returns no centre: background only.
+    probabilities = rates / rates.sum() if rates.sum() > 0 else np.full(len(rates), 1 / len(rates))
+    kinds = rng.choice(EVENT_KINDS, size=len(centres), p=probabilities)
 
     signal = background.copy()
     rows = []
