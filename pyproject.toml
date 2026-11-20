@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Reproducible benchmark of high-frequency oscillation (HFO) detectors on realistic simulations and public intraoperative ECoG."
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
+license = { text = "MIT" }
 authors = [{ name = "Chiheb Ayari" }]
 # Exact pins live in requirements.txt; these are the minimum compatible versions.
 dependencies = [
