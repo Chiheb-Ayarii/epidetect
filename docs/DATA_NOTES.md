@@ -204,8 +204,24 @@ Produced by `scripts/02_quality_control.py`. Outputs: `results/qc_*.csv`, `figur
    - P20 post-resection has **only odd** harmonics (150–450 Hz, 12–15 dB)
      (`figures/qc_harmonics_examples.png`).
 
-   Several harmonics fall inside the ripple and FR bands. Whether to notch-filter them is
-   decided in step 3.
+   Several harmonics fall inside the ripple and FR bands.
+
+   **Decision (step 3): no notch filter in the main analysis.** This is based on
+   `scripts/06_notch_decision.py` (`results/notch_decision.csv`), which looks at the 72
+   analysed channels with a harmonic above 6 dB between 100 and 450 Hz. The energy and wavelet
+   detectors were run on the raw and on the notch-filtered signal (zero-phase IIR notch,
+   Q = 30, only at that channel's present harmonics). We counted "harmonic-locked" detections,
+   whose frequency lies within ±5 Hz of a present harmonic:
+   - energy: 16,324 → 17,222 detections; locked 8.2 % → 5.4 %;
+   - wavelet: 4,937 → 4,754 detections; locked 6.8 % → 5.6 %.
+
+   Part of the locked fraction is chance: a few ±5 Hz windows cover ~5 % of the band. The
+   excess caused by harmonics is therefore only ~1–3 % of the detections. Meanwhile, the notch
+   lowers the adaptive threshold of the energy detector (+5.5 % detections), changing its
+   behaviour differently from one recording to the next. The simulations used to tune the
+   thresholds contain no mains interference. The notch filter (`epidetect.filters.notch_harmonics`)
+   remains available for a sensitivity analysis. The decision ignores the reference FR
+   markings on purpose, so that no evaluation data influences pre-processing.
 5. **Amplifier noise floor.** In many recordings the PSD becomes flat (white) above roughly
    150–250 Hz (`figures/qc_psd_pre.png`, `figures/qc_psd_post.png`). In the FR band, events
    must therefore stand out from electronic noise rather than from brain background. The
