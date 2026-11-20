@@ -7,6 +7,13 @@ bids_root = "data/bids"
 figures_dir = "figures"
 results_dir = "results"
 
+[data]
+# Recordings excluded from every analysis, as [patient, session]. Justification is produced by
+# scripts/02_quality_control.py (results/qc_duplicates.csv): the pre-resection recordings of
+# patients 12, 15 and 17 are byte-identical in the source files, so at most one is genuine and
+# we cannot tell which. They stay in the BIDS conversion (faithful copy), marked as bad.
+excluded_recordings = [["12", "pre"], ["15", "pre"], ["17", "pre"]]
+
 [recording]
 # Zurich: European mains frequency.
 line_freq_hz = 50.0
@@ -40,7 +47,8 @@ line_max_freq_hz = 450.0
 line_present_db = 6.0
 # Robust z-score threshold for relative channel flags (|z| > 5 ~ far beyond normal variation).
 robust_z_threshold = 5.0
-# Relative (robust z) criteria are meaningless with very few channels.
-min_channels_for_relative_qc = 4
+# Relative (robust z) criteria need enough channels for a stable median/MAD: with 4-6 strip
+# channels the MAD is tiny and z-scores explode (|z| > 40 observed). Strips get absolute checks.
+min_channels_for_relative_qc = 8
 # Absolute criterion: a channel with std below this (uV) is considered flat / disconnected.
 flat_std_uv = 1.0
