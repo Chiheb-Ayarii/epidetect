@@ -24,6 +24,17 @@ attribution.
 
 ```powershell
 .\run.ps1 setup       # create .venv and install pinned dependencies
-.\run.ps1 inventory   # regenerate docs/data_inventory.md from data/raw/
-.\run.ps1 test
+.\run.ps1 run         # run every numbered script in scripts/ in order (see below)
+.\run.ps1 notebooks   # re-execute the notebooks in notebooks/
+.\run.ps1 test        # unit tests (no real data needed)
+.\run.ps1 lint
 ```
+
+| Script | What it produces |
+|---|---|
+| `scripts/00_inventory_raw.py` | `docs/data_inventory.md`, a read-only inventory of the raw NIX files |
+| `scripts/01_convert_to_bids.py` | `data/bids/` (BIDS iEEG, git-ignored), `results/bids_conversion.csv` |
+| `scripts/02_quality_control.py` | `results/qc_*.csv`, `figures/qc_*.png`, bad channels marked in BIDS |
+
+Optional: validate the BIDS dataset with the official validator (requires Node.js):
+`npx bids-validator@1.15.0 data/bids`.
