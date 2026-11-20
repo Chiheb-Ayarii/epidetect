@@ -149,6 +149,14 @@ def repeated_sample_fraction(data_uv: np.ndarray) -> np.ndarray:
     return (np.diff(data_uv, axis=-1) == 0).mean(axis=-1)
 
 
+def robust_std(values: np.ndarray, axis: int | None = None) -> np.ndarray | float:
+    """1.4826 * median absolute deviation: equals the std for Gaussian data, but a few large
+    values (spikes, HFOs, artefacts) barely change it."""
+    median = np.median(values, axis=axis, keepdims=axis is not None)
+    mad = np.median(np.abs(values - median), axis=axis)
+    return MAD_TO_STD * mad
+
+
 def robust_z(values: np.ndarray) -> np.ndarray:
     """Robust z-score: (x - median) / (1.4826 * MAD). Returns zeros if the MAD is 0."""
     median = np.median(values)

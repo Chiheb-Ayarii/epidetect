@@ -14,7 +14,7 @@ first/last ``edge_margin_s`` seconds (see ``configs/default.toml``).
 from __future__ import annotations
 
 import numpy as np
-from scipy.signal import butter, sosfiltfilt
+from scipy.signal import butter, filtfilt, hilbert, iirnotch, sosfiltfilt
 
 
 def butter_bandpass_sos(fs: float, band: tuple[float, float], order: int = 4) -> np.ndarray:
@@ -45,3 +45,38 @@ def bandpass(x: np.ndarray, fs: float, band: tuple[float, float], order: int = 4
         order: Design order per edge (effective order after filtfilt: ``4 * order``).
     """
     return sosfiltfilt(butter_bandpass_sos(fs, band, order), x, axis=-1)
+
+
+def envelope(x: np.ndarray) -> np.ndarray:
+    """Amplitude envelope |x + i H[x]| (Hilbert transform) along the last axis.
+
+    The analytic signal keeps only the positive frequencies (doubled). For a narrow-band signal
+    A(t) cos(phi(t)) its modulus is A(t). Only meaningful after band-pass filtering.
+    """
+    return np.abs(hilbert(x, axis=-1))
+
+
+def moving_rms(x: np.ndarray, fs: float, window_s: float) -> np.ndarray:
+    """Centred moving root-mean-square over ``window_s`` seconds (same length as ``x``)."""
+    n = max(1, int(round(window_s * fs)))
+    kernel = np.ones(n) / n
+    power = np.convolve(np.asarray(x, dtype=float) ** 2, kernel, mode="same")
+    return np.sqrt(np.clip(power, 0.0, None))
+
+
+def notch_harmonics(
+    x: np.ndarray, fs: float, freqs_hz: list[float], quality: float = 30.0
+) -> np.ndarray:
+    """Remove narrow mains components with zero-phase IIR notch filters.
+
+    Args:
+        x: Signal (last axis = time).
+        fs: Sampling frequency (Hz).
+        freqs_hz: Centre frequencies to remove, e.g. ``[100, 200, 300]``.
+        quality: Q = f / bandwidth; Q = 30 removes about +/- f/60 around each line.
+    """
+    y = np.asarray(x, dtype=float)
+    for f0 in freqs_hz:
+        b, a = iirnotch(f0, quality, fs=fs)
+        y = filtfilt(b, a, y, axis=-1)
+    return y
