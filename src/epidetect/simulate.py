@@ -2,10 +2,11 @@
 
 Signal = background + events, sampled at ``fs_hz``:
 
-* **Background**: Gaussian noise whose power spectrum is ``S(f) = max(f, f_min)^-beta + floor``.
-  The 1/f^beta term models brain background; the white floor models amplifier noise (visible
-  in the real data above ~150-300 Hz, see docs/DATA_NOTES.md). The floor is set by the
-  *crossover frequency* at which both terms are equal.
+* **Background**: Gaussian noise whose power spectrum is ``S(f) = 1/f^beta + floor``, with a
+  shallower exponent ``beta_low`` below a knee (20 Hz). The 1/f part models brain background;
+  the white floor models amplifier noise (visible in the real data above ~150-300 Hz, see
+  docs/DATA_NOTES.md). The floor is set by the *crossover frequency* at which both terms are
+  equal. Parameters are calibrated on the real channels (scripts/03_calibrate_background.py).
 * **Ripples** (80-250 Hz) and **fast ripples** (250-500 Hz): Hann-windowed sinusoids with
   4-10 cycles, random frequency within the band and random phase.
 * **Spikes**: cusp-shaped transients (exponential rise and decay) followed by a smooth slow
@@ -46,10 +47,12 @@ def _as_tuple(value: Any) -> Any:
 
 @dataclass(frozen=True)
 class BackgroundParams:
-    """Background spectrum ``max(f, f_min)^-beta + crossover^-beta``, scaled to ``std_uv``."""
+    """Background spectrum (see :func:`background_psd_shape`), scaled to ``std_uv``."""
 
     beta: float = 3.5
-    crossover_hz: float = 300.0
+    crossover_hz: float = 260.0
+    beta_low: float = 2.5
+    knee_hz: float = 20.0
     f_min_hz: float = 1.0
     std_uv: float = 140.0
 
@@ -146,12 +149,18 @@ class Simulation:
 # --- Background -------------------------------------------------------------------------------
 
 
-def background_psd_shape(
-    freqs: np.ndarray, beta: float, crossover_hz: float, f_min_hz: float = 1.0
-) -> np.ndarray:
-    """Relative PSD ``max(f, f_min)^-beta + crossover^-beta`` (both terms equal at crossover)."""
-    f = np.maximum(freqs, f_min_hz)
-    return f ** (-beta) + crossover_hz ** (-beta)
+def background_psd_shape(freqs: np.ndarray, bg: BackgroundParams) -> np.ndarray:
+    """Relative background PSD (arbitrary scale).
+
+    Aperiodic part: ``f^-beta`` above ``knee_hz``, ``f^-beta_low`` below it (continuous at the
+    knee), flat below ``f_min_hz``. Plus a white floor equal to the aperiodic part at
+    ``crossover_hz`` (which must lie above the knee).
+    """
+    f = np.maximum(freqs, bg.f_min_hz)
+    high = f ** (-bg.beta)
+    low = bg.knee_hz ** (-bg.beta) * (f / bg.knee_hz) ** (-bg.beta_low)
+    aperiodic = np.where(f >= bg.knee_hz, high, low)
+    return aperiodic + bg.crossover_hz ** (-bg.beta)
 
 
 def colored_noise(
@@ -164,7 +173,7 @@ def colored_noise(
     """
     spectrum = np.fft.rfft(rng.standard_normal(n_samples))
     freqs = np.fft.rfftfreq(n_samples, d=1.0 / fs)
-    spectrum *= np.sqrt(background_psd_shape(freqs, bg.beta, bg.crossover_hz, bg.f_min_hz))
+    spectrum *= np.sqrt(background_psd_shape(freqs, bg))
     spectrum[0] = 0.0  # remove the DC component
     x = np.fft.irfft(spectrum, n=n_samples)
     return x / x.std()
