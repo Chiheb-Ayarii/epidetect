@@ -36,5 +36,10 @@ attribution.
 | `scripts/01_convert_to_bids.py` | `data/bids/` (BIDS iEEG, git-ignored), `results/bids_conversion.csv` |
 | `scripts/02_quality_control.py` | `results/qc_*.csv`, `figures/qc_*.png`, bad channels marked in BIDS |
 
-Optional: validate the BIDS dataset with the official validator (requires Node.js):
-`npx bids-validator@1.15.0 data/bids`.
+The BIDS output passes the official validator (requires Node.js):
+
+```powershell
+npx bids-validator@1.15.0 data/bids
+# -> "This dataset appears to be BIDS compatible": 0 errors, 0 warnings
+#    (488 files, 902 MB, 22 subjects, 2 sessions, iEEG, task "intraop")
+```

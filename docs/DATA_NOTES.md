@@ -159,8 +159,10 @@ What was actually done:
 - **Verification.** Every recording is read back from BIDS and compared with the NIX source:
   same channels, same FRs, maximum absolute error 3.9e-4 uV caused by float32 storage
   (`results/bids_conversion.csv`).
-- **Not yet done.** The official BIDS validator was not run in this environment. Command:
-  `npx bids-validator@1.15.0 data/bids`.
+- **Official BIDS validator.** Command: `npx bids-validator@1.15.0 data/bids` (Node.js).
+  Result on the step-1 output: "This dataset appears to be BIDS compatible", with **0 errors
+  and 0 warnings**. Summary: 488 files, 902 MB, 22 subjects, 2 sessions, modality iEEG, task
+  `intraop`.
 
 ## 7. Findings of the step-1 quality control
 
@@ -178,7 +180,7 @@ Produced by `scripts/02_quality_control.py`. Outputs: `results/qc_*.csv`, `figur
    - the QC script fails if an exclusion is not backed by the duplicate check
      (`results/qc_duplicates.csv`).
 
-   Cost: none of the three has FR markings. To report to the dataset authors.
+   Cost: none of the three has FR markings.
 2. **Channel flags.** With 3 recordings excluded, 429 channels remain. 17 of them are flagged
    (`results/qc_channels.csv`). Almost all are "250–500 Hz background outliers", i.e. a high
    noise floor in the fast-ripple band. The 250–500 Hz background is estimated with a
@@ -210,8 +212,8 @@ Produced by `scripts/02_quality_control.py`. Outputs: `results/qc_*.csv`, `figur
 2. The reference markings come from an automatic detector plus visual validation, so the
    "ground truth" is detector-biased.
 3. The clinical analysis becomes **patient-level outcome prediction from post-resection FRs**
-   instead of channel-level comparison with the resected zone, unless channel-level resection
-   labels can be obtained elsewhere, for example from the authors.
+   instead of channel-level comparison with the resected zone. The code is structured so that
+   a channel-level analysis can be added if channel-level resection labels become available.
 4. Patient imbalance (patient 06 ≈ 59% of the FRs) requires per-patient metrics and a
    patient-level bootstrap.
 5. The montage is bipolar only, sampled at 2000 Hz, with a 1–800 Hz hardware passband.
