@@ -1,9 +1,9 @@
 quantity,value
-n_channels,429.0
-fraction_floor_reached,0.5921
-median_beta_floor_reached,3.4733
-median_crossover_hz_floor_reached,261.0679
-q25_crossover_hz_floor_reached,204.9488
-q75_crossover_hz_floor_reached,321.3496
-median_beta_all,3.5232
-median_rmse_log10,0.1088
+n_channels,411.0
+fraction_floor_reached,0.6107
+median_beta_floor_reached,3.4776
+median_crossover_hz_floor_reached,260.4736
+q25_crossover_hz_floor_reached,205.0643
+q75_crossover_hz_floor_reached,322.1888
+median_beta_all,3.5315
+median_rmse_log10,0.1048
