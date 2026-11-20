@@ -46,3 +46,27 @@ npx bids-validator@1.15.0 data/bids
 # -> "This dataset appears to be BIDS compatible": 0 errors, 0 warnings
 #    (488 files, 902 MB, 22 subjects, 2 sessions, iEEG, task "intraop")
 ```
+
+## Limitations
+
+This section is completed at every step; the final README discusses each point with the results.
+
+**Data**
+- Only **fast ripples** are marked in the real data, by an automatic detector followed by visual
+  validation. This reference is detector-biased, and ripples can only be evaluated on
+  simulations.
+- No channel-level resection labels exist, so the clinical analysis is done at the patient level.
+- The pre-resection recordings of patients 12, 15 and 17 are byte-identical in the source files.
+  They are excluded.
+- **P22 pre-resection, channel 3-4** contains duplicated samples: every sample appears twice,
+  so it was effectively sampled at 1000 Hz and up-sampled to 2000 Hz. Its effective Nyquist
+  frequency is 500 Hz, so it cannot carry fast ripples. It is flagged by the quality control
+  and excluded from fast-ripple analyses.
+- Small cohort: 22 patients, of whom 8 were not seizure-free.
+
+**Simulator**
+- The background spectrum (1/f^β with a knee, plus a white amplifier floor) and the spike-apex
+  sharpness are calibrated on the real data. The spike shape itself (amplitudes, time
+  constants, slow wave) is a modelling choice.
+- The real anti-aliasing roll-off above 500 Hz and mains interference are not simulated.
+- One channel per simulation: no spatial correlation between channels.

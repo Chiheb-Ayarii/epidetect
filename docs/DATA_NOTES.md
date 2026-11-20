@@ -226,3 +226,6 @@ Produced by `scripts/02_quality_control.py`. Outputs: `results/qc_*.csv`, `figur
 5. The montage is bipolar only, sampled at 2000 Hz, with a 1–800 Hz hardware passband.
 6. The pre-resection recordings of patients 12, 15 and 17 are duplicates and are excluded.
 7. QC-flagged channels are kept in the main analysis, and a sensitivity analysis excludes them.
+   Exception: P22 pre-resection channel 3-4 has duplicated samples (effective sampling rate
+   1000 Hz, Nyquist 500 Hz). It cannot carry fast ripples and is excluded from every
+   fast-ripple analysis, including the main one. It also has no reference FR.
