@@ -8,6 +8,7 @@ Notebooks need the real data (data/bids), so they are not run in CI.
 
 from __future__ import annotations
 
+import asyncio
 import sys
 from pathlib import Path
 
@@ -34,6 +35,10 @@ def execute(path: Path) -> None:
 
 
 def main() -> None:
+    if sys.platform == "win32":
+        # The default Proactor event loop lacks what zmq (Jupyter's transport) needs; the
+        # selector loop avoids a RuntimeWarning on every notebook.
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     paths = [Path(p).resolve() for p in sys.argv[1:]] or sorted(
         (REPO_ROOT / "notebooks").glob("[0-9][0-9]_*.ipynb")
     )
