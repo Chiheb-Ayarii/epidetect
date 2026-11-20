@@ -52,6 +52,9 @@ robust_z_threshold = 5.0
 min_channels_for_relative_qc = 8
 # Absolute criterion: a channel with std below this (uV) is considered flat / disconnected.
 flat_std_uv = 1.0
+# Absolute criterion: fraction of identical consecutive samples. 0.5 = sampled at fs/2 and
+# duplicated (found once: P22 pre 3-4); every other channel is below 0.005.
+max_repeated_fraction = 0.1
 
 [simulation]
 seed = 20261120
@@ -63,8 +66,9 @@ edge_margin_s = 1.0
 filter_order = 4
 
 [simulation.background]
-# S(f) = max(f, f_min)^-beta + crossover^-beta. Values = medians fitted on the 254 real channels
-# whose floor is reached below 500 Hz (59 % of 429), rounded: beta 3.47, crossover 261 Hz
+# S(f) = max(f, f_min)^-beta + crossover^-beta. Values = medians fitted on the real channels
+# (QC-flagged excluded) whose floor is reached below 500 Hz (61 % of 411), rounded: beta 3.48,
+# crossover 260 Hz
 # (scripts/03_calibrate_background.py -> results/background_fit_summary.csv).
 beta = 3.5
 crossover_hz = 260.0
@@ -101,8 +105,25 @@ tau_decay_ms = [4.0, 12.0]
 slow_wave_ratio = [0.2, 0.5]
 slow_wave_delay_ms = [40.0, 80.0]
 slow_wave_sigma_ms = [20.0, 40.0]
+# Apex rounding (Gaussian width). Fitted so that simulated spikes ring after a 250-500 Hz
+# band-pass as much as real transients do (scripts/03_calibrate_simulator.py, part 2;
+# results/spike_apex_grid.csv). A pure cusp (0 ms) rings ~20x too strongly.
+apex_sigma_ms = [1.1, 1.6]
 
 [calibration]
 # Background-model fit range: above 500 Hz the real spectra fall (anti-aliasing roll-off).
 fit_range_hz = [20.0, 500.0]
 line_exclusion_hz = 3.0
+# Spike calibration (scripts/03_calibrate_simulator.py, part 2).
+# Real transients: robust z above this threshold in the 3-40 Hz band ...
+transient_band_hz = [3.0, 40.0]
+transient_z = 8.0
+transient_min_gap_s = 0.3
+# ... and no marked FR within this distance (a real FR would inflate the ringing ratio).
+fr_exclusion_s = 0.1
+ringing_half_window_s = 0.03
+# Simulated spikes used for each candidate apex-width range.
+spike_sim_duration_s = 300.0
+spike_sim_rate_per_min = 30.0
+apex_low_grid_ms = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2]
+apex_high_grid_ms = [1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0]

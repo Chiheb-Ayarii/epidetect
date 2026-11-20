@@ -1,17 +1,30 @@
-"""Calibrate the simulator background on the real recordings.
+"""Calibrate the simulator on the real recordings: background spectrum and spike sharpness.
 
-For every analysed channel (excluded recordings skipped), the median-Welch PSD is fitted with
-``S(f) = c f^-beta + floor`` on ``[calibration] fit_range_hz``. The medians of beta and of the
-crossover frequency, over channels whose floor is reached inside the fit range, are the values
-to copy into ``[simulation.background]`` of ``configs/default.toml``.
+Both parts skip excluded recordings and QC-flagged channels (status "bad" in BIDS).
+
+Part 1 - background. For every analysed channel, the median-Welch
+PSD is fitted with ``S(f) = c f^-beta + floor`` on ``[calibration] fit_range_hz``. The medians
+of beta and of the crossover frequency, over channels whose floor is reached inside the fit
+range, are the values to copy into ``[simulation.background]`` of ``configs/default.toml``.
+
+Part 2 - spikes. How much a spike "rings" after a 250-500 Hz band-pass depends on how rounded
+its apex is. On real pre-resection data we find large transients (robust z > threshold in
+3-40 Hz), away from marked FRs, and measure the ringing ratio = max |FR-band signal| within
++/- 30 ms / robust std of the FR-band signal. The same ratio is measured on simulated spikes for
+a grid of apex-width ranges; the range whose quantiles best match the real ones (log scale) is
+the value to copy into ``[simulation.spike] apex_sigma_ms``.
 
 Usage:
-    python scripts/03_calibrate_background.py [--config configs/default.toml]
+    python scripts/03_calibrate_simulator.py [--config configs/default.toml]
 
 Outputs:
-    results/background_fit.csv           one row per channel
-    results/background_fit_summary.csv   medians and fractions quoted in the docs
-    figures/sim_background_calibration.png   real vs simulated spectra, fitted parameters
+    results/background_fit.csv            one row per channel
+    results/background_fit_summary.csv    medians and fractions quoted in the docs
+    results/spike_ringing_real.csv        one row per real transient
+    results/spike_apex_grid.csv           distance to the real quantiles for each candidate range
+    results/spike_calibration_summary.csv real vs simulated quantiles of the ringing ratio
+    figures/sim_background_calibration.png
+    figures/sim_spike_calibration.png
 """
 
 from __future__ import annotations
@@ -23,8 +36,9 @@ import matplotlib.pyplot as plt
 import mne_bids
 import numpy as np
 import pandas as pd
+from scipy.signal import find_peaks
 
-from epidetect import io, plotting, qc, simulate
+from epidetect import filters, io, plotting, qc, simulate
 from epidetect.config import load_config
 from epidetect.simulate import SimulationParams
 
@@ -45,6 +59,8 @@ def fit_real_channels(cfg: dict) -> tuple[pd.DataFrame, np.ndarray, np.ndarray]:
             raw = io.read_bids_recording(bids_root, patient, session, task)
             freqs, psd = qc.welch_psd(raw.get_data() / io.MICROVOLT, raw.info["sfreq"])
             for channel, channel_psd in zip(raw.ch_names, psd, strict=True):
+                if channel in raw.info["bads"]:  # QC-flagged in step 1 (channels.tsv)
+                    continue
                 fit = simulate.fit_background_model(
                     freqs,
                     channel_psd,
@@ -173,6 +189,135 @@ def plot(
     plotting.save(fig, path)
 
 
+# --- Part 2: spike sharpness ------------------------------------------------------------------
+
+RINGING_QUANTILES = (0.10, 0.25, 0.50, 0.75, 0.90)
+
+
+def robust_std(x: np.ndarray) -> float:
+    """1.4826 * median absolute deviation (std of Gaussian data, insensitive to bursts)."""
+    return float(1.4826 * np.median(np.abs(x - np.median(x))))
+
+
+def ringing_ratio(fr_band: np.ndarray, centre: int, half_window: int, scale: float) -> float:
+    """max |FR-band signal| within +/- half_window samples of centre, divided by scale."""
+    return float(np.abs(fr_band[centre - half_window : centre + half_window + 1]).max() / scale)
+
+
+def measure_real_ringing(cfg: dict) -> pd.DataFrame:
+    """Ringing ratio at large sharp transients of real pre-resection recordings."""
+    cal = cfg["calibration"]
+    bids_root, task = cfg["paths"]["bids_root"], cfg["bids"]["task"]
+    excluded = {tuple(x) for x in cfg["data"]["excluded_recordings"]}
+    order = cfg["simulation"]["filter_order"]
+    fr_band = tuple(cfg["simulation"]["events"]["fast_ripple_band_hz"])
+    rows = []
+    for patient in sorted(mne_bids.get_entity_vals(bids_root, "subject")):
+        if (patient, "pre") in excluded:
+            continue
+        raw = io.read_bids_recording(bids_root, patient, "pre", task)
+        fs = raw.info["sfreq"]
+        x = raw.get_data() / io.MICROVOLT
+        low = filters.bandpass(x, fs, tuple(cal["transient_band_hz"]), order)
+        high = filters.bandpass(x, fs, fr_band, order)
+        markings = io.annotations_to_markings(raw)
+        half = int(cal["ringing_half_window_s"] * fs)
+        edge = int(cfg["simulation"]["edge_margin_s"] * fs)
+        for i, channel in enumerate(raw.ch_names):
+            if channel in raw.info["bads"]:  # QC-flagged in step 1 (channels.tsv)
+                continue
+            z = (low[i] - np.median(low[i])) / robust_std(low[i])
+            peaks, _ = find_peaks(
+                np.abs(z), height=cal["transient_z"], distance=int(cal["transient_min_gap_s"] * fs)
+            )
+            fr_times = markings.loc[markings.channel == channel, "onset_s"].to_numpy()
+            scale = robust_std(high[i])
+            for peak in peaks[(peaks > edge) & (peaks < x.shape[1] - edge)]:
+                t = peak / fs
+                if fr_times.size and np.min(np.abs(fr_times - t)) < cal["fr_exclusion_s"]:
+                    continue  # a marked FR here would inflate the ratio: not a pure spike
+                rows.append(
+                    {
+                        "patient": patient,
+                        "channel": channel,
+                        "time_s": t,
+                        "z": abs(z[peak]),
+                        "ratio": ringing_ratio(high[i], peak, half, scale),
+                    }
+                )
+    return pd.DataFrame(rows)
+
+
+def simulated_ringing(
+    params: SimulationParams, apex_ms: tuple[float, float], seed: int, cal: dict
+) -> np.ndarray:
+    """Ringing ratios of simulated isolated spikes with apex width uniform in ``apex_ms``."""
+    p = params.replace(
+        duration_s=cal["spike_sim_duration_s"],
+        events={
+            "rate_ripple_per_min": 0.0,
+            "rate_fast_ripple_per_min": 0.0,
+            "rate_spike_per_min": cal["spike_sim_rate_per_min"],
+        },
+        spike={"apex_sigma_ms": apex_ms},
+    )
+    sim = simulate.simulate_from_seed(p, seed)
+    high = filters.bandpass(sim.signal_uv, sim.fs, p.events.fast_ripple_band_hz, p.filter_order)
+    scale = robust_std(high)
+    half = int(cal["ringing_half_window_s"] * sim.fs)
+    centres = (sim.events["center_s"].to_numpy() * sim.fs).round().astype(int)
+    return np.array([ringing_ratio(high, c, half, scale) for c in centres])
+
+
+def log_quantile_distance(a: np.ndarray, b: np.ndarray) -> float:
+    """Root mean squared difference of log10 quantiles (10, 25, 50, 75, 90 %)."""
+    qa, qb = np.quantile(a, RINGING_QUANTILES), np.quantile(b, RINGING_QUANTILES)
+    return float(np.sqrt(np.mean((np.log10(qa) - np.log10(qb)) ** 2)))
+
+
+def search_apex_range(
+    params: SimulationParams, real: np.ndarray, seed: int, cal: dict
+) -> pd.DataFrame:
+    """Distance to the real ringing quantiles for every candidate (low, high) apex range."""
+    rows = []
+    for low in cal["apex_low_grid_ms"]:
+        for high in cal["apex_high_grid_ms"]:
+            if high < low:
+                continue
+            sim = simulated_ringing(params, (low, high), seed, cal)
+            rows.append(
+                {
+                    "apex_low_ms": low,
+                    "apex_high_ms": high,
+                    "distance_log10": log_quantile_distance(sim, real),
+                }
+            )
+    return pd.DataFrame(rows).sort_values("distance_log10", ignore_index=True)
+
+
+def plot_spike_calibration(real: np.ndarray, sims: dict[str, np.ndarray], path: Path) -> None:
+    """Empirical CDFs of the ringing ratio: real transients vs simulated spikes."""
+    fig, ax = plt.subplots(figsize=(7, 3.8))
+    styles = [(plotting.ACCENT, "--"), (plotting.SERIES[0], "-")]
+    ax.step(
+        np.sort(real),
+        np.linspace(0, 1, len(real)),
+        color=plotting.INK,
+        lw=1.4,
+        label=f"real transients (n={len(real)})",
+    )
+    for (label, values), (color, ls) in zip(sims.items(), styles, strict=True):
+        ax.step(
+            np.sort(values), np.linspace(0, 1, len(values)), color=color, ls=ls, lw=1.2, label=label
+        )
+    ax.set_xscale("log")
+    ax.set_xlabel("Ringing ratio: max |250-500 Hz| near the transient / robust std")
+    ax.set_ylabel("Cumulative fraction")
+    ax.set_title("How strongly spikes ring after band-pass filtering", loc="left")
+    ax.legend(loc="lower right", fontsize=8)
+    plotting.save(fig, path)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--config", type=Path, default=None)
@@ -182,16 +327,45 @@ def main() -> None:
     results, figures = cfg["paths"]["results_dir"], cfg["paths"]["figures_dir"]
     fit_range = tuple(cfg["calibration"]["fit_range_hz"])
     params = SimulationParams.from_config(cfg["simulation"])
+    seed = cfg["simulation"]["seed"]
 
-    fits, freqs, real = fit_real_channels(cfg)
+    # Part 1: background spectrum.
+    fits, freqs, real_psd = fit_real_channels(cfg)
     fits.round(5).to_csv(results / "background_fit.csv", index=False, lineterminator="\n")
     summary = summarise(fits, fit_range[1])
     summary.round(4).to_csv(
         results / "background_fit_summary.csv", index=False, lineterminator="\n"
     )
-    sim = simulated_spectra(params, cfg["simulation"]["seed"], SIMULATED_CHANNELS)
-    plot(freqs, real, fits, sim, params, fit_range, figures / "sim_background_calibration.png")
+    sim = simulated_spectra(params, seed, SIMULATED_CHANNELS)
+    plot(freqs, real_psd, fits, sim, params, fit_range, figures / "sim_background_calibration.png")
     print(summary.to_string(index=False))
+
+    # Part 2: spike apex width.
+    cal = cfg["calibration"]
+    real = measure_real_ringing(cfg)
+    real.round(4).to_csv(results / "spike_ringing_real.csv", index=False, lineterminator="\n")
+    grid = search_apex_range(params, real["ratio"].to_numpy(), seed, cal)
+    grid.round(4).to_csv(results / "spike_apex_grid.csv", index=False, lineterminator="\n")
+    best = (grid.loc[0, "apex_low_ms"], grid.loc[0, "apex_high_ms"])
+    configured = params.spike.apex_sigma_ms
+    sims = {
+        "simulated, pure cusp (apex 0 ms)": simulated_ringing(params, (0.0, 0.0), seed, cal),
+        f"simulated, configured apex {configured[0]}-{configured[1]} ms": simulated_ringing(
+            params, configured, seed, cal
+        ),
+    }
+    quantiles = {"real": real["ratio"].to_numpy(), **sims}
+    table = pd.DataFrame(
+        {name: np.quantile(v, RINGING_QUANTILES) for name, v in quantiles.items()},
+        index=[f"q{int(q * 100)}" for q in RINGING_QUANTILES],
+    )
+    table.round(3).to_csv(results / "spike_calibration_summary.csv", lineterminator="\n")
+    plot_spike_calibration(real["ratio"].to_numpy(), sims, figures / "sim_spike_calibration.png")
+    print(f"\n{len(real)} real transients in {real.patient.nunique()} patients")
+    print(
+        f"Best apex range: {best[0]}-{best[1]} ms (configured: {configured[0]}-{configured[1]} ms)"
+    )
+    print(table.round(2).to_string())
 
 
 if __name__ == "__main__":
