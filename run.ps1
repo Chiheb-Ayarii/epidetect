@@ -18,7 +18,11 @@ function Invoke-Inventory {
 
 function Invoke-Run {
     # Runs every numbered script in order: each one regenerates its figures / tables.
-    Get-ChildItem (Join-Path $PSScriptRoot "scripts") -Filter "[0-9][0-9]_*.py" | Sort-Object Name | ForEach-Object {
+    # -Filter does not understand [0-9] ranges (it silently matches nothing): use -like instead.
+    $Scripts = Get-ChildItem (Join-Path $PSScriptRoot "scripts") -File |
+        Where-Object { $_.Name -like "[0-9][0-9]_*.py" } | Sort-Object Name
+    if (-not $Scripts) { throw "No numbered scripts found in scripts/" }
+    $Scripts | ForEach-Object {
         Write-Host "==> $($_.Name)"
         & $Py $_.FullName
         if ($LASTEXITCODE -ne 0) { throw "$($_.Name) failed" }
