@@ -1,0 +1,5 @@
+,q10,q25,q50,q75,q90,n
+real fast ripples,272.7,285.7,303.0,324.3,346.7,2378
+real transients (ringing),292.7,317.1,341.5,365.9,390.2,3000
+simulated fast ripples (uniform),278.2,291.8,381.6,437.2,471.8,59
+simulated spikes (ringing),243.9,243.9,268.3,292.7,341.5,64

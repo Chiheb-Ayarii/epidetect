@@ -1,0 +1,201 @@
+variant,test_set,snr_db,metric,estimate,ci_low,ci_high,n_units
+"A: uniform training, all features",uniform,0.0,f1,0.0588,0.0,0.125,10
+"A: uniform training, all features",uniform,0.0,precision,0.3333,0.0,0.625,10
+"A: uniform training, all features",uniform,0.0,recall_isolated,0.0337,0.0,0.069,10
+"A: uniform training, all features",uniform,0.0,recall_on_spike,0.0286,0.0,0.0968,10
+"A: uniform training, all features",uniform,0.0,spike_false_alarm_rate,0.0088,0.0,0.0275,10
+"A: uniform training, all features",uniform,5.0,f1,0.4575,0.3916,0.5134,10
+"A: uniform training, all features",uniform,5.0,precision,0.814,0.6977,0.9268,10
+"A: uniform training, all features",uniform,5.0,recall_isolated,0.3614,0.2812,0.4355,10
+"A: uniform training, all features",uniform,5.0,recall_on_spike,0.1852,0.0588,0.2692,10
+"A: uniform training, all features",uniform,5.0,spike_false_alarm_rate,0.0169,0.0,0.0362,10
+"A: uniform training, all features",uniform,10.0,f1,0.8718,0.8241,0.9189,10
+"A: uniform training, all features",uniform,10.0,precision,0.887,0.8181,0.95,10
+"A: uniform training, all features",uniform,10.0,recall_isolated,0.9884,0.967,1.0,10
+"A: uniform training, all features",uniform,10.0,recall_on_spike,0.5152,0.3636,0.7083,10
+"A: uniform training, all features",uniform,10.0,spike_false_alarm_rate,0.0,0.0,0.0,10
+"A: uniform training, all features",uniform,15.0,f1,0.955,0.9353,0.9697,10
+"A: uniform training, all features",uniform,15.0,precision,0.9381,0.8972,0.9709,10
+"A: uniform training, all features",uniform,15.0,recall_isolated,1.0,1.0,1.0,10
+"A: uniform training, all features",uniform,15.0,recall_on_spike,0.8889,0.7777,1.0,10
+"A: uniform training, all features",uniform,15.0,spike_false_alarm_rate,0.0,0.0,0.0,10
+"A: uniform training, all features",uniform,20.0,f1,0.971,0.9551,0.9848,10
+"A: uniform training, all features",uniform,20.0,precision,0.9504,0.9241,0.9765,10
+"A: uniform training, all features",uniform,20.0,recall_isolated,1.0,1.0,1.0,10
+"A: uniform training, all features",uniform,20.0,recall_on_spike,0.973,0.9091,1.0,10
+"A: uniform training, all features",uniform,20.0,spike_false_alarm_rate,0.0263,0.0075,0.0536,10
+"A: uniform training, all features",realistic,0.0,f1,0.0752,0.0155,0.1526,10
+"A: uniform training, all features",realistic,0.0,precision,0.5556,0.2,0.8464,10
+"A: uniform training, all features",realistic,0.0,recall_isolated,0.0482,0.0105,0.1039,10
+"A: uniform training, all features",realistic,0.0,recall_on_spike,0.0244,0.0,0.0857,10
+"A: uniform training, all features",realistic,0.0,spike_false_alarm_rate,0.0088,0.0,0.0275,10
+"A: uniform training, all features",realistic,5.0,f1,0.4968,0.4211,0.5696,10
+"A: uniform training, all features",realistic,5.0,precision,0.8298,0.7692,0.9118,10
+"A: uniform training, all features",realistic,5.0,recall_isolated,0.4658,0.3714,0.5556,10
+"A: uniform training, all features",realistic,5.0,recall_on_spike,0.1351,0.0555,0.2333,10
+"A: uniform training, all features",realistic,5.0,spike_false_alarm_rate,0.0085,0.0,0.0236,10
+"A: uniform training, all features",realistic,10.0,f1,0.8559,0.7953,0.9069,10
+"A: uniform training, all features",realistic,10.0,precision,0.8909,0.8165,0.9524,10
+"A: uniform training, all features",realistic,10.0,recall_isolated,0.9878,0.9663,1.0,10
+"A: uniform training, all features",realistic,10.0,recall_on_spike,0.4595,0.3571,0.5938,10
+"A: uniform training, all features",realistic,10.0,spike_false_alarm_rate,0.0244,0.0069,0.048,10
+"A: uniform training, all features",realistic,15.0,f1,0.9417,0.9055,0.9689,10
+"A: uniform training, all features",realistic,15.0,precision,0.9211,0.8649,0.9659,10
+"A: uniform training, all features",realistic,15.0,recall_isolated,1.0,1.0,1.0,10
+"A: uniform training, all features",realistic,15.0,recall_on_spike,0.8333,0.6538,1.0,10
+"A: uniform training, all features",realistic,15.0,spike_false_alarm_rate,0.0,0.0,0.0,10
+"A: uniform training, all features",realistic,20.0,f1,0.967,0.9399,0.9893,10
+"A: uniform training, all features",realistic,20.0,precision,0.9565,0.9213,0.9868,10
+"A: uniform training, all features",realistic,20.0,recall_isolated,1.0,1.0,1.0,10
+"A: uniform training, all features",realistic,20.0,recall_on_spike,0.9375,0.8409,1.0,10
+"A: uniform training, all features",realistic,20.0,spike_false_alarm_rate,0.0088,0.0,0.0291,10
+"B: uniform training, no freq_hz",uniform,0.0,f1,0.0444,0.0,0.0923,10
+"B: uniform training, no freq_hz",uniform,0.0,precision,0.2727,0.0,0.5385,10
+"B: uniform training, no freq_hz",uniform,0.0,recall_isolated,0.0225,0.0,0.0568,10
+"B: uniform training, no freq_hz",uniform,0.0,recall_on_spike,0.0286,0.0,0.0968,10
+"B: uniform training, no freq_hz",uniform,0.0,spike_false_alarm_rate,0.0175,0.0,0.0451,10
+"B: uniform training, no freq_hz",uniform,5.0,f1,0.4516,0.3762,0.5132,10
+"B: uniform training, no freq_hz",uniform,5.0,precision,0.7778,0.6667,0.8936,10
+"B: uniform training, no freq_hz",uniform,5.0,recall_isolated,0.3614,0.2687,0.4457,10
+"B: uniform training, no freq_hz",uniform,5.0,recall_on_spike,0.1852,0.0476,0.3125,10
+"B: uniform training, no freq_hz",uniform,5.0,spike_false_alarm_rate,0.0085,0.0,0.0286,10
+"B: uniform training, no freq_hz",uniform,10.0,f1,0.8559,0.8,0.917,10
+"B: uniform training, no freq_hz",uniform,10.0,precision,0.8632,0.7835,0.9286,10
+"B: uniform training, no freq_hz",uniform,10.0,recall_isolated,0.9767,0.9494,1.0,10
+"B: uniform training, no freq_hz",uniform,10.0,recall_on_spike,0.5152,0.3429,0.7241,10
+"B: uniform training, no freq_hz",uniform,10.0,spike_false_alarm_rate,0.0,0.0,0.0,10
+"B: uniform training, no freq_hz",uniform,15.0,f1,0.9507,0.9202,0.9732,10
+"B: uniform training, no freq_hz",uniform,15.0,precision,0.9298,0.8737,0.9714,10
+"B: uniform training, no freq_hz",uniform,15.0,recall_isolated,1.0,1.0,1.0,10
+"B: uniform training, no freq_hz",uniform,15.0,recall_on_spike,0.8889,0.7777,1.0,10
+"B: uniform training, no freq_hz",uniform,15.0,spike_false_alarm_rate,0.0,0.0,0.0,10
+"B: uniform training, no freq_hz",uniform,20.0,f1,0.9926,0.9823,1.0,10
+"B: uniform training, no freq_hz",uniform,20.0,precision,0.9854,0.9653,1.0,10
+"B: uniform training, no freq_hz",uniform,20.0,recall_isolated,1.0,1.0,1.0,10
+"B: uniform training, no freq_hz",uniform,20.0,recall_on_spike,1.0,1.0,1.0,10
+"B: uniform training, no freq_hz",uniform,20.0,spike_false_alarm_rate,0.0088,0.0,0.0291,10
+"B: uniform training, no freq_hz",realistic,0.0,f1,0.0889,0.0301,0.1563,10
+"B: uniform training, no freq_hz",realistic,0.0,precision,0.5455,0.3,0.7861,10
+"B: uniform training, no freq_hz",realistic,0.0,recall_isolated,0.0361,0.0,0.0921,10
+"B: uniform training, no freq_hz",realistic,0.0,recall_on_spike,0.0732,0.0,0.1389,10
+"B: uniform training, no freq_hz",realistic,0.0,spike_false_alarm_rate,0.0175,0.0,0.0396,10
+"B: uniform training, no freq_hz",realistic,5.0,f1,0.4841,0.4056,0.5647,10
+"B: uniform training, no freq_hz",realistic,5.0,precision,0.8085,0.7179,0.8948,10
+"B: uniform training, no freq_hz",realistic,5.0,recall_isolated,0.4521,0.3548,0.55,10
+"B: uniform training, no freq_hz",realistic,5.0,recall_on_spike,0.1351,0.0303,0.2778,10
+"B: uniform training, no freq_hz",realistic,5.0,spike_false_alarm_rate,0.0085,0.0,0.0286,10
+"B: uniform training, no freq_hz",realistic,10.0,f1,0.8711,0.8148,0.9194,10
+"B: uniform training, no freq_hz",realistic,10.0,precision,0.9245,0.8652,0.9697,10
+"B: uniform training, no freq_hz",realistic,10.0,recall_isolated,0.9878,0.9655,1.0,10
+"B: uniform training, no freq_hz",realistic,10.0,recall_on_spike,0.4595,0.35,0.6112,10
+"B: uniform training, no freq_hz",realistic,10.0,spike_false_alarm_rate,0.0,0.0,0.0,10
+"B: uniform training, no freq_hz",realistic,15.0,f1,0.9211,0.875,0.9585,10
+"B: uniform training, no freq_hz",realistic,15.0,precision,0.8824,0.8163,0.9403,10
+"B: uniform training, no freq_hz",realistic,15.0,recall_isolated,1.0,1.0,1.0,10
+"B: uniform training, no freq_hz",realistic,15.0,recall_on_spike,0.8333,0.6364,1.0,10
+"B: uniform training, no freq_hz",realistic,15.0,spike_false_alarm_rate,0.0081,0.0,0.0256,10
+"B: uniform training, no freq_hz",realistic,20.0,f1,0.9852,0.9593,1.0,10
+"B: uniform training, no freq_hz",realistic,20.0,precision,0.9852,0.9638,1.0,10
+"B: uniform training, no freq_hz",realistic,20.0,recall_isolated,1.0,1.0,1.0,10
+"B: uniform training, no freq_hz",realistic,20.0,recall_on_spike,0.9583,0.862,1.0,10
+"B: uniform training, no freq_hz",realistic,20.0,spike_false_alarm_rate,0.0,0.0,0.0,10
+"C: uniform training, no freq_hz / n_cycles",uniform,0.0,f1,0.0704,0.0143,0.1322,10
+"C: uniform training, no freq_hz / n_cycles",uniform,0.0,precision,0.2778,0.0909,0.4444,10
+"C: uniform training, no freq_hz / n_cycles",uniform,0.0,recall_isolated,0.0337,0.0,0.069,10
+"C: uniform training, no freq_hz / n_cycles",uniform,0.0,recall_on_spike,0.0571,0.0,0.1351,10
+"C: uniform training, no freq_hz / n_cycles",uniform,0.0,spike_false_alarm_rate,0.0263,0.0075,0.0556,10
+"C: uniform training, no freq_hz / n_cycles",uniform,5.0,f1,0.4878,0.4247,0.5402,10
+"C: uniform training, no freq_hz / n_cycles",uniform,5.0,precision,0.7407,0.6323,0.8684,10
+"C: uniform training, no freq_hz / n_cycles",uniform,5.0,recall_isolated,0.3855,0.2941,0.4684,10
+"C: uniform training, no freq_hz / n_cycles",uniform,5.0,recall_on_spike,0.2963,0.1579,0.4167,10
+"C: uniform training, no freq_hz / n_cycles",uniform,5.0,spike_false_alarm_rate,0.0169,0.0,0.0427,10
+"C: uniform training, no freq_hz / n_cycles",uniform,10.0,f1,0.848,0.8069,0.8939,10
+"C: uniform training, no freq_hz / n_cycles",uniform,10.0,precision,0.8092,0.7466,0.8667,10
+"C: uniform training, no freq_hz / n_cycles",uniform,10.0,recall_isolated,0.9884,0.967,1.0,10
+"C: uniform training, no freq_hz / n_cycles",uniform,10.0,recall_on_spike,0.6364,0.4571,0.8379,10
+"C: uniform training, no freq_hz / n_cycles",uniform,10.0,spike_false_alarm_rate,0.0163,0.0,0.0431,10
+"C: uniform training, no freq_hz / n_cycles",uniform,15.0,f1,0.9391,0.9091,0.9653,10
+"C: uniform training, no freq_hz / n_cycles",uniform,15.0,precision,0.8926,0.8362,0.9453,10
+"C: uniform training, no freq_hz / n_cycles",uniform,15.0,recall_isolated,1.0,1.0,1.0,10
+"C: uniform training, no freq_hz / n_cycles",uniform,15.0,recall_on_spike,0.963,0.8947,1.0,10
+"C: uniform training, no freq_hz / n_cycles",uniform,15.0,spike_false_alarm_rate,0.0244,0.0067,0.0522,10
+"C: uniform training, no freq_hz / n_cycles",uniform,20.0,f1,0.9677,0.9428,0.9883,10
+"C: uniform training, no freq_hz / n_cycles",uniform,20.0,precision,0.9375,0.8917,0.9769,10
+"C: uniform training, no freq_hz / n_cycles",uniform,20.0,recall_isolated,1.0,1.0,1.0,10
+"C: uniform training, no freq_hz / n_cycles",uniform,20.0,recall_on_spike,1.0,1.0,1.0,10
+"C: uniform training, no freq_hz / n_cycles",uniform,20.0,spike_false_alarm_rate,0.0351,0.0,0.0971,10
+"C: uniform training, no freq_hz / n_cycles",realistic,0.0,f1,0.1399,0.0845,0.2047,10
+"C: uniform training, no freq_hz / n_cycles",realistic,0.0,precision,0.5263,0.3333,0.762,10
+"C: uniform training, no freq_hz / n_cycles",realistic,0.0,recall_isolated,0.0482,0.0105,0.1039,10
+"C: uniform training, no freq_hz / n_cycles",realistic,0.0,recall_on_spike,0.1463,0.0857,0.2051,10
+"C: uniform training, no freq_hz / n_cycles",realistic,0.0,spike_false_alarm_rate,0.0351,0.0087,0.0642,10
+"C: uniform training, no freq_hz / n_cycles",realistic,5.0,f1,0.538,0.4741,0.5914,10
+"C: uniform training, no freq_hz / n_cycles",realistic,5.0,precision,0.7541,0.6724,0.8305,10
+"C: uniform training, no freq_hz / n_cycles",realistic,5.0,recall_isolated,0.4658,0.3714,0.5556,10
+"C: uniform training, no freq_hz / n_cycles",realistic,5.0,recall_on_spike,0.3243,0.1875,0.4412,10
+"C: uniform training, no freq_hz / n_cycles",realistic,5.0,spike_false_alarm_rate,0.0424,0.0086,0.0865,10
+"C: uniform training, no freq_hz / n_cycles",realistic,10.0,f1,0.8523,0.7934,0.8996,10
+"C: uniform training, no freq_hz / n_cycles",realistic,10.0,precision,0.8559,0.7767,0.918,10
+"C: uniform training, no freq_hz / n_cycles",realistic,10.0,recall_isolated,1.0,1.0,1.0,10
+"C: uniform training, no freq_hz / n_cycles",realistic,10.0,recall_on_spike,0.5135,0.3947,0.6286,10
+"C: uniform training, no freq_hz / n_cycles",realistic,10.0,spike_false_alarm_rate,0.0325,0.0,0.0748,10
+"C: uniform training, no freq_hz / n_cycles",realistic,15.0,f1,0.9021,0.8458,0.9422,10
+"C: uniform training, no freq_hz / n_cycles",realistic,15.0,precision,0.8413,0.7619,0.906,10
+"C: uniform training, no freq_hz / n_cycles",realistic,15.0,recall_isolated,1.0,1.0,1.0,10
+"C: uniform training, no freq_hz / n_cycles",realistic,15.0,recall_on_spike,0.875,0.7273,1.0,10
+"C: uniform training, no freq_hz / n_cycles",realistic,15.0,spike_false_alarm_rate,0.0163,0.0,0.0397,10
+"C: uniform training, no freq_hz / n_cycles",realistic,20.0,f1,0.9541,0.9304,0.9773,10
+"C: uniform training, no freq_hz / n_cycles",realistic,20.0,precision,0.9122,0.8699,0.9556,10
+"C: uniform training, no freq_hz / n_cycles",realistic,20.0,recall_isolated,1.0,1.0,1.0,10
+"C: uniform training, no freq_hz / n_cycles",realistic,20.0,recall_on_spike,1.0,1.0,1.0,10
+"C: uniform training, no freq_hz / n_cycles",realistic,20.0,spike_false_alarm_rate,0.0439,0.0097,0.0826,10
+"D: realistic training, all features",uniform,0.0,f1,0.0709,0.0278,0.1192,10
+"D: realistic training, all features",uniform,0.0,precision,0.2941,0.1176,0.5,10
+"D: realistic training, all features",uniform,0.0,recall_isolated,0.0337,0.0,0.069,10
+"D: realistic training, all features",uniform,0.0,recall_on_spike,0.0571,0.0,0.1316,10
+"D: realistic training, all features",uniform,0.0,spike_false_alarm_rate,0.0263,0.0078,0.0526,10
+"D: realistic training, all features",uniform,5.0,f1,0.4938,0.4285,0.5503,10
+"D: realistic training, all features",uniform,5.0,precision,0.7692,0.6383,0.871,10
+"D: realistic training, all features",uniform,5.0,recall_isolated,0.3976,0.3174,0.4638,10
+"D: realistic training, all features",uniform,5.0,recall_on_spike,0.2593,0.125,0.4074,10
+"D: realistic training, all features",uniform,5.0,spike_false_alarm_rate,0.0593,0.0172,0.1111,10
+"D: realistic training, all features",uniform,10.0,f1,0.8681,0.8252,0.9138,10
+"D: realistic training, all features",uniform,10.0,precision,0.8793,0.813,0.9412,10
+"D: realistic training, all features",uniform,10.0,recall_isolated,0.9767,0.9494,1.0,10
+"D: realistic training, all features",uniform,10.0,recall_on_spike,0.5455,0.3902,0.7407,10
+"D: realistic training, all features",uniform,10.0,spike_false_alarm_rate,0.0325,0.0079,0.0603,10
+"D: realistic training, all features",uniform,15.0,f1,0.9427,0.9101,0.9658,10
+"D: realistic training, all features",uniform,15.0,precision,0.9068,0.8519,0.9492,10
+"D: realistic training, all features",uniform,15.0,recall_isolated,1.0,1.0,1.0,10
+"D: realistic training, all features",uniform,15.0,recall_on_spike,0.9259,0.8182,1.0,10
+"D: realistic training, all features",uniform,15.0,spike_false_alarm_rate,0.0163,0.0,0.0379,10
+"D: realistic training, all features",uniform,20.0,f1,0.9747,0.9502,0.9933,10
+"D: realistic training, all features",uniform,20.0,precision,0.9507,0.9051,0.9868,10
+"D: realistic training, all features",uniform,20.0,recall_isolated,1.0,1.0,1.0,10
+"D: realistic training, all features",uniform,20.0,recall_on_spike,1.0,1.0,1.0,10
+"D: realistic training, all features",uniform,20.0,spike_false_alarm_rate,0.0351,0.0078,0.0721,10
+"D: realistic training, all features",realistic,0.0,f1,0.0588,0.0135,0.1301,10
+"D: realistic training, all features",realistic,0.0,precision,0.3333,0.1,0.5,10
+"D: realistic training, all features",realistic,0.0,recall_isolated,0.0361,0.0,0.0921,10
+"D: realistic training, all features",realistic,0.0,recall_on_spike,0.0244,0.0,0.0857,10
+"D: realistic training, all features",realistic,0.0,spike_false_alarm_rate,0.0263,0.0,0.0536,10
+"D: realistic training, all features",realistic,5.0,f1,0.5882,0.5217,0.6413,10
+"D: realistic training, all features",realistic,5.0,precision,0.8333,0.7736,0.9057,10
+"D: realistic training, all features",realistic,5.0,recall_isolated,0.5068,0.4318,0.5769,10
+"D: realistic training, all features",realistic,5.0,recall_on_spike,0.3514,0.2059,0.4595,10
+"D: realistic training, all features",realistic,5.0,spike_false_alarm_rate,0.0339,0.0081,0.0673,10
+"D: realistic training, all features",realistic,10.0,f1,0.8936,0.8534,0.9327,10
+"D: realistic training, all features",realistic,10.0,precision,0.9052,0.8558,0.9524,10
+"D: realistic training, all features",realistic,10.0,recall_isolated,1.0,1.0,1.0,10
+"D: realistic training, all features",realistic,10.0,recall_on_spike,0.6216,0.4839,0.7419,10
+"D: realistic training, all features",realistic,10.0,spike_false_alarm_rate,0.0244,0.007,0.0509,10
+"D: realistic training, all features",realistic,15.0,f1,0.9427,0.9187,0.9663,10
+"D: realistic training, all features",realistic,15.0,precision,0.9068,0.8633,0.9537,10
+"D: realistic training, all features",realistic,15.0,recall_isolated,1.0,1.0,1.0,10
+"D: realistic training, all features",realistic,15.0,recall_on_spike,0.9167,0.8077,1.0,10
+"D: realistic training, all features",realistic,15.0,spike_false_alarm_rate,0.0244,0.0071,0.0496,10
+"D: realistic training, all features",realistic,20.0,f1,0.9745,0.9559,0.991,10
+"D: realistic training, all features",realistic,20.0,precision,0.9571,0.9286,0.9846,10
+"D: realistic training, all features",realistic,20.0,recall_isolated,1.0,1.0,1.0,10
+"D: realistic training, all features",realistic,20.0,recall_on_spike,0.9792,0.931,1.0,10
+"D: realistic training, all features",realistic,20.0,spike_false_alarm_rate,0.0088,0.0,0.0291,10
