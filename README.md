@@ -43,6 +43,15 @@ attribution.
 | `scripts/08_evaluate_simulations.py` | simulation benchmark per class, SNR and event sub-group: `results/sim_eval_*.csv`, `figures/sim_benchmark_snr.png` (~5 min) |
 | `scripts/09_ml_frequency_check.py` | does the ML detector rely on a simulator frequency artefact? `results/ml_frequency_check.csv`, `figures/ml_frequency_check.png` (~5 min) |
 | `scripts/10_evaluate_real.py` | leave-one-patient-out on the real fast-ripple markings, two tuning strategies: `results/real_lopo_*.csv`, `figures/real_lopo.png` (~40 min) |
+| `scripts/11_real_fr_context.py` | share of real fast ripples riding on a large transient: `results/real_fr_context.csv` |
+| `scripts/12_evaluate_hybrid.py` | strategy C, tuned on a hybrid simulation (synthetic FRs in real background of the training patients), compared with A and B: `results/strategy_*.csv`, `figures/strategy_comparison.png` (~40 min) |
+| `scripts/13_clinical.py` | patient-level clinical analysis (post-resection FR rate vs outcome): `results/clinical_*.csv`, `figures/clinical_roc.png` (~30 min) |
+
+Channel-level clinical analysis (optional): if a file `data/resection_labels.csv` with columns
+`patient,channel,resected` (patient as two digits, e.g. `01`; channel as in BIDS, e.g. `01-02`;
+`resected` as `True`/`False`) is provided, `scripts/13_clinical.py` also computes, for each
+patient, the AUC of pre-resection channel FR rates against the resection labels. No such labels
+exist for the public dataset.
 
 Intermediate analyses are cached in `data/derived/` (git-ignored); the cache folder name
 contains a hash of the configuration, so changing a parameter never reuses stale results.
@@ -110,6 +119,20 @@ This section is completed at every step; the final README discusses each point w
 - The calibration of the simulator used every patient. Recalibrating it without the test
   patient changes its parameters by about 1–8 % (`results/real_fold_calibration.csv`), so this
   leakage is negligible. Strategy B uses the recalibrated simulator in every fold anyway.
+- Hybrid simulation (strategy C: synthetic fast ripples inserted into real background of the
+  training patients, with rate, share on spikes, frequency, duration and SNR calibrated on
+  their markings) brings the tuned thresholds close to those tuned on real data. Median energy
+  k is 7, versus 8 for A and 3.5 for B; median wavelet z is 12, versus 12 for A and 6 for B. For
+  the energy and wavelet detectors, it matches strategy A in macro F1 (paired difference
+  +0.003). The gain over the fully synthetic simulator (+0.02 to +0.03) has a confidence
+  interval that includes 0. The ML detector trained on hybrid data fails (macro recall 0.09).
+  A plausible but untested explanation: realistic noise is enough to set a threshold, but a
+  classifier also needs realistic positive examples. The inserted Hann-windowed sinusoids are
+  cleaner than real FRs, and unmarked real FRs in the "background" are learned as negatives
+  (`results/strategy_comparison.csv`).
+- A single patient dominates the dataset statistics: without patient 06, the calibrated FR
+  rate drops from 2.5 to 1.1 per channel-minute and the share on spikes from 62 % to 39 %
+  (`results/hybrid_fold_calibration.csv`).
 
 **Detectors** (behaviour observed on simulations in step 3, quantified in step 4)
 - Energy detector: sharp spikes produce detections, especially in the ripple band, where a
