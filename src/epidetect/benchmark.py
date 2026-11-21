@@ -12,8 +12,12 @@ Grid choice: the value with the highest pooled F1; among ties, the first value o
 
 from __future__ import annotations
 
+import hashlib
+import json
+import pickle
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -21,6 +25,7 @@ import pandas as pd
 from sklearn.model_selection import GroupKFold
 
 from epidetect import evaluate
+from epidetect.detectors.base import bands_from_config
 from epidetect.detectors.energy import EnergyParams, detect_energy
 from epidetect.detectors.ml import MLDetector, MLParams, label_candidates
 from epidetect.detectors.wavelet import WaveletParams, detect_wavelet
@@ -264,3 +269,48 @@ def detect_tuned(tuned: TunedDetectors, unit: TrainingUnit) -> dict[str, pd.Data
         "wavelet": unit.wavelet[unit.wavelet["score"] >= tuned.wavelet_z],
         "ml": ml,
     }
+
+
+# --- Configuration and cache -------------------------------------------------------------------
+
+
+def settings_from_config(
+    cfg: dict[str, Any], feature_names: tuple[str, ...] | None = None
+) -> DetectorSettings:
+    """DetectorSettings from ``[detectors]``, ``[features]`` and ``[benchmark]``."""
+    det, bench = cfg["detectors"], cfg["benchmark"]
+    return DetectorSettings(
+        bands=bands_from_config(det),
+        energy=EnergyParams.from_config(det["energy"]),
+        wavelet=WaveletParams.from_config(det["wavelet"]),
+        ml=MLParams.from_config(det["ml"], cfg["features"]),
+        edge_margin_s=det["edge_margin_s"],
+        energy_grid=tuple(bench["energy_k_grid"]),
+        wavelet_grid=tuple(bench["wavelet_z_grid"]),
+        probability_grid=tuple(bench["probability_grid"]),
+        inner_folds=bench["inner_folds"],
+        feature_names=feature_names or tuple(FEATURE_NAMES),
+    )
+
+
+def cache_dir(cfg: dict[str, Any], name: str) -> Path:
+    """``data/derived/<name>-<hash>``: the hash covers every config section that can change a
+    cached analysis, so a parameter change never reuses stale results."""
+    relevant = {k: cfg[k] for k in ("simulation", "detectors", "features", "benchmark", "data")}
+    digest = hashlib.sha1(json.dumps(relevant, sort_keys=True, default=str).encode()).hexdigest()[
+        :10
+    ]
+    path = cfg["paths"]["raw_dir"].parent / "derived" / f"{name}-{digest}"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def load_or_compute(path: Path, compute: Callable[[], Any]) -> Any:
+    """Return the pickled result at ``path``, computing and saving it first if needed."""
+    if path.exists():
+        with path.open("rb") as f:
+            return pickle.load(f)  # noqa: S301 - our own cache, never downloaded data
+    result = compute()
+    with path.open("wb") as f:
+        pickle.dump(result, f)
+    return result
