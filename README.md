@@ -204,7 +204,7 @@ Rule "at least one reference FR after resection": sensitivity 6/8, specificity 1
      brings the thresholds of the energy and wavelet detectors to their real-data values.
    - It does not help the ML detector, which needs realistic positive examples.
 5. **Clinical.** The reference markings reproduce the original finding: post-resection FRs
-   predict a poor outcome. Our detectors do not, because their false positives drown the signal.
+   predict a poor outcome. My detectors do not, because their false positives drown the signal.
 
 ## Limitations
 
@@ -262,7 +262,7 @@ Rule "at least one reference FR after resection": sensitivity 6/8, specificity 1
 **Clinical**
 - The analysis is exploratory and observational. The upper bound of the AUC interval reaches
   1, and it is not known whether the markings were made blind to the outcome.
-- Our detectors, which agree with the reference at macro F1 ≈ 0.2, are not clinically usable
+- My three detectors, which agree with the reference at macro F1 ≈ 0.2, are not clinically usable
   as they are.
 
 ## Future work
