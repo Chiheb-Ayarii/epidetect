@@ -40,7 +40,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from epidetect import benchmark, evaluate, io, plotting
+from epidetect import benchmark, evaluate, plotting, realdata
 from epidetect.config import load_config
 from epidetect.simulate import SimulationParams
 
@@ -51,36 +51,6 @@ STRATEGIES = {
     "B": "B: tuned on recalibrated simulations",
 }
 RINGING_QUANTILES = (0.10, 0.25, 0.50, 0.75, 0.90)
-
-
-# --- Data -------------------------------------------------------------------------------------
-
-
-def channel_table(cfg: dict) -> pd.DataFrame:
-    """Pre-resection channels to analyse, with their QC flag (repeated-sample channels dropped)."""
-    qc = pd.read_csv(cfg["paths"]["results_dir"] / "qc_channels.csv", dtype={"patient": str})
-    qc = qc[(qc.session == "pre") & ~qc.excluded_recording]
-    unusable = qc.reasons.fillna("").str.contains("repeated samples")
-    return qc.loc[~unusable, ["patient", "channel", "bad"]].reset_index(drop=True)
-
-
-def analyse_patient(
-    cfg: dict, patient: str, channels: list[str], settings: benchmark.DetectorSettings
-) -> tuple[benchmark.TrainingUnit, dict]:
-    """All detector outputs of one patient (cached); also returns minutes per channel."""
-    raw = io.read_bids_recording(cfg["paths"]["bids_root"], patient, "pre", cfg["bids"]["task"])
-    fs = raw.info["sfreq"]
-    markings = io.annotations_to_markings(raw)
-    per_channel, minutes = {}, {}
-    for channel in channels:
-        x = raw.get_data(picks=[channel])[0] / io.MICROVOLT
-        m = markings[markings.channel == channel]
-        reference = pd.DataFrame(
-            {"onset_s": m.onset_s, "offset_s": m.onset_s + m.duration_s, "kind": BAND}
-        )
-        per_channel[channel] = benchmark.analyse_signal(x, fs, reference, settings)[BAND]
-        minutes[channel] = (len(x) / fs - 2 * settings.edge_margin_s) / 60
-    return benchmark.merge_channels(per_channel, patient), minutes
 
 
 # --- Fold-wise simulator recalibration --------------------------------------------------------
@@ -293,15 +263,10 @@ def main() -> None:
     settings = dataclasses.replace(full, bands={BAND: full.bands[BAND]})
     base = SimulationParams.from_config(cfg["simulation"])
 
-    channels = channel_table(cfg)
-    cache = benchmark.cache_dir(cfg, "real")
-    units, minutes = {}, {}
-    for patient, group in channels.groupby("patient"):
-        units[patient], minutes[patient] = benchmark.load_or_compute(
-            cache / f"{patient}.pkl",
-            lambda p=patient, g=group: analyse_patient(cfg, p, g.channel.tolist(), settings),
-        )
-        print(f"patient {patient}: {len(group)} channels, {len(units[patient].reference)} FRs")
+    channels = realdata.channel_table(cfg)
+    units, minutes = realdata.load_real_units(cfg, settings, channels)
+    for patient, unit in units.items():
+        print(f"patient {patient}: {len(minutes[patient])} channels, {len(unit.reference)} FRs")
 
     calibration = [{"left_out": "none (all patients)", **calibrated_values(cfg, None)}]
     rows = []
