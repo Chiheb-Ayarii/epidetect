@@ -21,7 +21,7 @@ dist/
 Thumbs.db
 .DS_Store
 
-# --- Private documents (kept locally, never published) ---
+# --- Local-only documents ---
 docs/*_QUESTIONS.md
 docs/*_QUESTIONS.pdf
 docs/EpiDetect_*.pdf
