@@ -40,6 +40,12 @@ attribution.
 | `scripts/05_spike_filter_demo.py` | why a filtered spike looks like an HFO: `figures/false_hfo_demo.png`, `results/false_hfo_demo.csv` |
 | `scripts/06_notch_decision.py` | effect of notch-filtering mains harmonics on real detections: `results/notch_decision.csv` (~6 min) |
 | `scripts/07_detector_examples.py` | the three detectors on four typical simulated situations: `figures/detector_examples.png` |
+| `scripts/08_evaluate_simulations.py` | simulation benchmark per class, SNR and event sub-group: `results/sim_eval_*.csv`, `figures/sim_benchmark_snr.png` (~5 min) |
+| `scripts/09_ml_frequency_check.py` | does the ML detector rely on a simulator frequency artefact? `results/ml_frequency_check.csv`, `figures/ml_frequency_check.png` (~5 min) |
+| `scripts/10_evaluate_real.py` | leave-one-patient-out on the real fast-ripple markings, two tuning strategies: `results/real_lopo_*.csv`, `figures/real_lopo.png` (~40 min) |
+
+Intermediate analyses are cached in `data/derived/` (git-ignored); the cache folder name
+contains a hash of the configuration, so changing a parameter never reuses stale results.
 
 The BIDS output passes the official validator (requires Node.js):
 
@@ -72,6 +78,20 @@ This section is completed at every step; the final README discusses each point w
   constants, slow wave) is a modelling choice.
 - The real anti-aliasing roll-off above 500 Hz and mains interference are not simulated.
 - One channel per simulation: no spatial correlation between channels.
+- The spike-apex calibration matches the **amplitude** of the 250–500 Hz ringing of real
+  transients, but not its **frequency**. Simulated spikes ring at a median of 268 Hz, against
+  341 Hz for real transients and 303 Hz for real fast ripples
+  (`results/frequency_distributions.csv`). The rounded-apex model makes the spike spectrum fall
+  too steeply inside the band.
+- The SNR is defined against the background power of the **whole** band. With a 1/f^3.5
+  background, most of the 80–250 Hz background power lies near 80 Hz, so a 200 Hz ripple "at
+  0 dB" is locally well above the background. SNR values are therefore not comparable between
+  the ripple and fast-ripple bands, and they favour detectors that work locally in frequency
+  (the whitened wavelet map).
+- For HFOs riding on a spike, a detection may be triggered by the spike rather than by the
+  oscillation: the energy detector "finds" 100 % of them in the ripple band even at 0 dB.
+  Recall on this sub-group must be read together with the false-alarm rate on isolated
+  spikes.
 
 **Detectors** (behaviour observed on simulations in step 3, quantified in step 4)
 - Energy detector: sharp spikes produce detections, especially in the ripple band, where a
