@@ -92,6 +92,24 @@ This section is completed at every step; the final README discusses each point w
   oscillation: the energy detector "finds" 100 % of them in the ripple band even at 0 dB.
   Recall on this sub-group must be read together with the false-alarm rate on isolated
   spikes.
+- The simulator puts 30 % of HFOs on a spike. In the real data, 62 % of the reference fast
+  ripples (pooled; median 30 % per patient) lie within 50 ms of a large transient
+  (`results/real_fr_context.csv`).
+- Thresholds tuned on simulations do not transfer to the real data. They are far too
+  permissive (energy k = 3.5 versus 8, wavelet z = 6 versus 12–15 when tuned on real training
+  patients), giving 0.7–1.6 false detections per minute in patients without reference fast
+  ripples (`results/real_lopo_summary.csv`, strategy B). Real recordings contain many more
+  fast-ripple-band transients than the simulator.
+
+**Real-data evaluation**
+- Only 16 patients have reference fast ripples, and 7 of them have 1 to 13. Every detector
+  gets F1 = 0 on those 7. Macro-averaged F1 values have wide bootstrap intervals; for
+  example, ML 0.25 [0.12, 0.39].
+- Micro-averaged (pooled) metrics are dominated by patient 06 (1,413 of 2,378 FRs) and are
+  much higher than macro averages; for example, ML micro F1 0.61 versus macro 0.25.
+- The calibration of the simulator used every patient. Recalibrating it without the test
+  patient changes its parameters by about 1–8 % (`results/real_fold_calibration.csv`), so this
+  leakage is negligible. Strategy B uses the recalibrated simulator in every fold anyway.
 
 **Detectors** (behaviour observed on simulations in step 3, quantified in step 4)
 - Energy detector: sharp spikes produce detections, especially in the ripple band, where a

@@ -91,6 +91,13 @@ Implications:
   (per-patient medians: 9.5–19.5 ms). All markings fall inside the recording.
 - Counts: **2,378 FRs pre-resection** (16 of 22 patients have at least one) and **101 FRs
   post-resection** (10 patients).
+- **Context and frequency (measured in step 4).**
+  - **62 %** of the pre-resection FRs (pooled; median 30 % per patient, from 0 % to 100 %)
+    lie within 50 ms of a large transient (robust z > 8 in 3–40 Hz), i.e. most of them ride
+    on a spike (`scripts/11_real_fr_context.py`).
+  - Their frequency (zero crossings of the 250–500 Hz signal) has a median of 303 Hz, with a
+    10–90 % range of 273–347 Hz: real FRs sit in the lower part of the band
+    (`scripts/09_ml_frequency_check.py`).
 - **Strong imbalance between patients:** patient 06 alone has 1,413 of the 2,378 pre-resection
   FRs (≈59%). Six patients (12, 15, 16, 17, 21, 22) have **zero** pre-resection FRs, and several
   have only 1–6. Consequences:
