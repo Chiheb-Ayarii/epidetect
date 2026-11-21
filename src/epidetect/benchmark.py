@@ -13,14 +13,18 @@ Grid choice: the value with the highest pooled F1; among ties, the first value o
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from typing import Any
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupKFold
 
 from epidetect import evaluate
-from epidetect.detectors.ml import MLDetector
+from epidetect.detectors.energy import EnergyParams, detect_energy
+from epidetect.detectors.ml import MLDetector, MLParams, label_candidates
+from epidetect.detectors.wavelet import WaveletParams, detect_wavelet
+from epidetect.features import FEATURE_NAMES
 
 
 @dataclass(frozen=True)
@@ -129,3 +133,134 @@ def tune_ml_threshold(
         return evaluate.precision_recall_f1(tp, fp, n_reference - tp)["f1"]
 
     return best_on_grid(grid, f1_of)
+
+
+# --- Running all detectors on one signal, tuning, applying ------------------------------------
+
+
+@dataclass(frozen=True)
+class DetectorSettings:
+    """Everything needed to run and tune the three detectors."""
+
+    bands: dict[str, tuple[float, float]]
+    energy: EnergyParams
+    wavelet: WaveletParams
+    ml: MLParams
+    edge_margin_s: float
+    energy_grid: tuple[float, ...]
+    wavelet_grid: tuple[float, ...]
+    probability_grid: tuple[float, ...]
+    inner_folds: int = 5
+    feature_names: tuple[str, ...] = tuple(FEATURE_NAMES)
+
+    def ml_detector(self) -> MLDetector:
+        return MLDetector(
+            self.bands, self.ml, self.energy, self.wavelet, self.edge_margin_s, self.feature_names
+        )
+
+
+def analyse_signal(
+    x_uv: np.ndarray, fs: float, reference: pd.DataFrame, settings: DetectorSettings
+) -> dict[str, dict[str, Any]]:
+    """Run everything needed for tuning and testing on one channel, split by band.
+
+    Returns, for each band: ``energy`` (dict k -> detections), ``wavelet`` (detections at the
+    lowest grid threshold), ``candidates`` (ML candidate table with ``label``) and
+    ``reference`` (events of the band). ``reference`` needs ``kind``, ``onset_s``, ``offset_s``.
+    """
+    s = settings
+    energy = {
+        k: detect_energy(x_uv, fs, s.bands, replace(s.energy, threshold_k=k), s.edge_margin_s)
+        for k in s.energy_grid
+    }
+    wavelet = detect_wavelet(
+        x_uv, fs, s.bands, replace(s.wavelet, z_threshold=min(s.wavelet_grid)), s.edge_margin_s
+    )
+    candidates = s.ml_detector().table(x_uv, fs)
+    candidates["label"] = label_candidates(candidates, reference)
+    out = {}
+    for band in s.bands:
+        out[band] = {
+            "energy": {k: d[d["band"] == band].reset_index(drop=True) for k, d in energy.items()},
+            "wavelet": wavelet[wavelet["band"] == band].reset_index(drop=True),
+            "candidates": candidates[candidates["band"] == band].reset_index(drop=True),
+            "reference": reference[reference["kind"] == band].reset_index(drop=True),
+        }
+    return out
+
+
+def merge_channels(per_channel: dict[str, dict[str, Any]], unit: str) -> TrainingUnit:
+    """Combine the analyses of several channels (one band) into one unit with a channel column."""
+
+    def tagged(name: str, table: pd.DataFrame) -> pd.DataFrame:
+        return table.assign(channel=name)
+
+    names = list(per_channel)
+    grid = per_channel[names[0]]["energy"].keys() if names else []
+    return TrainingUnit(
+        unit=unit,
+        reference=pd.concat(
+            [tagged(n, per_channel[n]["reference"]) for n in names], ignore_index=True
+        ),
+        energy={
+            k: pd.concat([tagged(n, per_channel[n]["energy"][k]) for n in names], ignore_index=True)
+            for k in grid
+        },
+        wavelet=pd.concat([tagged(n, per_channel[n]["wavelet"]) for n in names], ignore_index=True),
+        candidates=pd.concat(
+            [tagged(n, per_channel[n]["candidates"]) for n in names], ignore_index=True
+        ),
+    )
+
+
+@dataclass
+class TunedDetectors:
+    """Thresholds chosen on training units, and the trained forest (one band)."""
+
+    band: str
+    energy_k: float
+    wavelet_z: float
+    ml_threshold: float
+    ml: MLDetector
+    train_f1: dict[str, float]
+
+
+def tune_band(
+    units: Sequence[TrainingUnit], band: str, settings: DetectorSettings
+) -> TunedDetectors:
+    """Tune the three detectors of one band on training units only."""
+    energy_k, f1_energy = tune_energy(units, settings.energy_grid)
+    wavelet_z, f1_wavelet = tune_wavelet(units, settings.wavelet_grid)
+    table = pd.concat([u.candidates.assign(unit=u.unit) for u in units], ignore_index=True)
+    groups = table["unit"].to_numpy()
+    probabilities = out_of_fold_probabilities(
+        table, groups, settings.ml_detector, settings.inner_folds
+    )
+    n_reference = sum(len(u.reference) for u in units)
+    ml_threshold, f1_ml = tune_ml_threshold(
+        table, probabilities, n_reference, settings.probability_grid
+    )
+    ml = settings.ml_detector().fit_table(table)
+    return TunedDetectors(
+        band,
+        energy_k,
+        wavelet_z,
+        ml_threshold,
+        ml,
+        {"energy": f1_energy, "wavelet": f1_wavelet, "ml": f1_ml},
+    )
+
+
+def detect_tuned(tuned: TunedDetectors, unit: TrainingUnit) -> dict[str, pd.DataFrame]:
+    """Detections of the three tuned detectors on a (test) unit, for the tuned band."""
+    candidates = unit.candidates
+    if len(candidates) and tuned.band in tuned.ml.models:
+        scored = tuned.ml.predict_table(candidates)
+        ml = scored[scored["score"] >= tuned.ml_threshold]
+    else:
+        ml = candidates.iloc[0:0]
+    return {
+        "energy": unit.energy[tuned.energy_k],
+        "wavelet": unit.wavelet[unit.wavelet["score"] >= tuned.wavelet_z],
+        "ml": ml,
+    }
