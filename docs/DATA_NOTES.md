@@ -9,8 +9,8 @@ full per-patient table is in [`data_inventory.md`](data_inventory.md) (regenerat
 
 - Repository: <https://gin.g-node.org/USZ_NCH/Intraoperative_ECoG_HFO> (Neurosurgery department,
   University Hospital Zurich).
-- Licence: **CC BY-SA 4.0**. Attribution is required, and derived *data* (e.g. our BIDS
-  conversion) must keep the same licence. That is one more reason not to redistribute it: we
+- Licence: **CC BY-SA 4.0**. Attribution is required, and derived *data* (e.g. my BIDS
+  conversion) must keep the same licence. That is one more reason not to redistribute it: I
   publish only the code that rebuilds it.
 - Primary citation (stored in each file's metadata): Boran E. et al., "High-density ECoG improves
   the detection of high frequency oscillations that predict seizure outcome", *Clinical
@@ -23,7 +23,7 @@ full per-patient table is in [`data_inventory.md`](data_inventory.md) (regenerat
 Each file is **HDF5** written with the **NIX** data model (root attribute `format = "nix"`,
 version 1.1.0). NIX is a neuroscience schema layered on HDF5: it stores *blocks* (here, recording
 sessions), *data arrays* with explicit *dimensions*, *tags* (annotated time intervals) and a
-*metadata* tree. The files can be read either with plain `h5py`, which we used for inspection, or
+*metadata* tree. The files can be read either with plain `h5py`, which I used for inspection, or
 with the official `nixio` library.
 
 ```
@@ -59,7 +59,7 @@ a string.
 Implications:
 - The fast-ripple band (250–500 Hz) lies well below both the hardware low-pass (800 Hz) and
   Nyquist (1000 Hz). The ripple band (80–250 Hz) is also fully available.
-- Because the montage is fixed to bipolar, we cannot re-reference the data (no common-average
+- Because the montage is fixed to bipolar, I cannot re-reference the data (no common-average
   reference).
 - Channel labels are **not uniform** across patients: `01-02` (patients 01–11, 14) versus `1-2`
   (12, 13, 15–22). Patient 20 has an unusual montage `1-4, 4-2, 2-3`. Some channels are missing
@@ -75,12 +75,12 @@ Implications:
   validated automatic detector" and then **visually validated**. This is **not** an independent
   expert marking from scratch. The reference is therefore biased toward events that this
   detector finds. A detector that resembles it will look better than it really is, and true FRs
-  missed by that detector are counted as our false positives. This must be stated in the README
+  missed by that detector are counted as my false positives. This must be stated in the README
   limitations.
 - **Only fast ripples are marked.** There are **no ripple (80–250 Hz) markings**. Per-class
   evaluation of ripples is therefore possible **only on simulations**.
 - **Channel index convention:** `position[0]` is **1-based** (MATLAB style), even though NIX
-  indices are normally 0-based. We checked this on all 2,479 markings in two ways:
+  indices are normally 0-based. I checked this on all 2,479 markings in two ways:
   1. The channel label in the tag name, e.g. `FR_153_Channel_22_25-26`, equals
      `labels[index - 1]` in 100% of cases and `labels[index]` in 0% of cases.
   2. The peak 250–500 Hz amplitude inside the marked window, relative to that channel's median,
@@ -101,13 +101,13 @@ Implications:
 - **Strong imbalance between patients:** patient 06 alone has 1,413 of the 2,378 pre-resection
   FRs (≈59%). Six patients (12, 15, 16, 17, 21, 22) have **zero** pre-resection FRs, and several
   have only 1–6. Consequences:
-  - Pooled metrics would mostly measure performance on patient 06. We will report per-patient
+  - Pooled metrics would mostly measure performance on patient 06. I will report per-patient
     metrics and macro-averages, and bootstrap **over patients**, not over events.
   - In leave-one-patient-out, a test patient with zero reference FRs has undefined recall. Only
-    false positives can be counted for them, so we will report the false-positive rate per minute
+    false positives can be counted for them, so I will report the false-positive rate per minute
     for those patients.
-- We cannot tell from the files whether every channel and the whole duration were reviewed,
-  although the README implies it. We assume exhaustive marking and list this as an assumption.
+- I cannot tell from the files whether every channel and the whole duration were reviewed,
+  although the README implies it. I assume exhaustive marking and list this as an assumption.
 
 ## 5. Clinical information
 
@@ -131,7 +131,7 @@ What the data does support, which is also the analysis of the original publicati
 **patient-level** prediction of outcome from **post-resection FR occurrence or rate**, with
 seizure-free versus not seizure-free as the binary label. The idea is that FRs remaining after
 the resection indicate residual epileptogenic tissue. With 22 patients (8 not seizure-free), any
-AUC will have a very wide confidence interval. We will report it with a bootstrap CI and
+AUC will have a very wide confidence interval. I will report it with a bootstrap CI and
 present it as exploratory.
 
 ## 6. BIDS conversion (done in step 1)
@@ -153,7 +153,7 @@ the notes after it record what was actually done.
 What was actually done:
 
 - **FR channel.** `mne-bids` 0.20 writes `events.tsv` **without** the channel of
-  channel-specific annotations (checked on a toy example). We therefore rewrite `events.tsv` with
+  channel-specific annotations (checked on a toy example). I therefore rewrite `events.tsv` with
   an extra `channel` column, described in `events.json`. `epidetect.io.read_bids_recording`
   rebuilds channel-specific annotations from it. Recordings without FRs still get an empty
   `events.tsv`.
@@ -178,7 +178,7 @@ Produced by `scripts/02_quality_control.py`. Outputs: `results/qc_*.csv`, `figur
 1. **Duplicated recordings in the source data.** The pre-resection recordings of patients
    **12, 15 and 17** are **byte-identical**: 4 channels each, 122.2 s each, same samples. These
    are three different patients (different ages, etiologies and resection areas), so at most
-   one of the three recordings can be genuine, and we cannot tell which one. Their
+   one of the three recordings can be genuine, and I cannot tell which one. Their
    post-resection recordings are distinct. Handling:
    - the three pre-resection recordings stay in BIDS (faithful conversion), with every channel
      marked `bad` and the reason given;
@@ -217,7 +217,7 @@ Produced by `scripts/02_quality_control.py`. Outputs: `results/qc_*.csv`, `figur
    `scripts/06_notch_decision.py` (`results/notch_decision.csv`), which looks at the 72
    analysed channels with a harmonic above 6 dB between 100 and 450 Hz. The energy and wavelet
    detectors were run on the raw and on the notch-filtered signal (zero-phase IIR notch,
-   Q = 30, only at that channel's present harmonics). We counted "harmonic-locked" detections,
+   Q = 30, only at that channel's present harmonics). I counted "harmonic-locked" detections,
    whose frequency lies within ±5 Hz of a present harmonic:
    - energy: 16,324 → 17,222 detections; locked 8.2 % → 5.4 %;
    - wavelet: 4,937 → 4,754 detections; locked 6.8 % → 5.6 %.

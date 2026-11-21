@@ -51,7 +51,7 @@ real transients. A deterministic demonstration shows the central trap of the fie
 
 **Clinical.** With the reference markings, the post-resection FR rate predicts a poor outcome:
 AUC 0.83 [0.62, 1.00], permutation p = 0.004. This reproduces the original publication. With
-our detectors it does not (AUC 0.40–0.61), because their false positives drown the signal.
+my detectors it does not (AUC 0.40–0.61), because their false positives drown the signal.
 
 **Take-away.** The hard part of HFO detection is not the detector but the evaluation: what the
 reference is, which unit is independent, how to tune without leakage, and whether simulation
@@ -75,10 +75,10 @@ The raw data go in `data/raw/` (see the README). Everything derived from them (`
 
 ## Step 0 – Environment and data inspection
 
-### What we did and why
-We created the Python 3.11 environment, the project structure and the task runner (`run.ps1`,
-since `make` is not available on Windows). Then we **inspected the raw files before writing any
-loader**, and wrote what we found in `docs/DATA_NOTES.md`. The point is to understand the data
+### What I did and why
+I created the Python 3.11 environment, the project structure and the task runner (`run.ps1`,
+since `make` is not available on Windows). Then I **inspected the raw files before writing any
+loader**, and wrote what I found in `docs/DATA_NOTES.md`. The point is to understand the data
 format, its units, its labels and their caveats before trusting any analysis.
 
 ### Key concept: the NIX format and its pitfalls
@@ -100,7 +100,7 @@ with h5py.File(path, "r") as f:
 ```
 
 ### Choices and alternatives
-We read the files with plain `h5py` rather than the `nixio` library: it adds no dependency and
+I read the files with plain `h5py` rather than the `nixio` library: it adds no dependency and
 shows the layout explicitly. The inventory is a script, not a notebook, so the numbers quoted
 in `DATA_NOTES.md` can be regenerated.
 
@@ -124,7 +124,7 @@ the tag name.
 
 ## Step 1 – Loading, BIDS conversion, quality control
 
-### What we did and why
+### What I did and why
 `epidetect.io` reads the NIX files and converts them to BIDS with `mne-bids`. Every recording
 is read back and compared with the source. `epidetect.qc` then computes, for every channel:
 - a median Welch spectrum;
@@ -136,7 +136,7 @@ is read back and compared with the source. `epidetect.qc` then computes, for eve
 ### Key concepts
 - **Welch PSD**: the periodogram of one long segment is not a consistent estimator (its
   variance does not decrease). Averaging 1 s Hann windows trades frequency resolution for
-  variance. We use the **median** over windows, which ignores the few windows containing fast
+  variance. I use the **median** over windows, which ignores the few windows containing fast
   ripples. Note that its bias correction (÷ ln 2) is exact for Gaussian noise but inflates pure
   tones by 1.44, so mains harmonics are measured on the mean PSD.
 - **Robust z-score**: (x − median) / (1.4826 × MAD). One aberrant channel cannot hide itself by
@@ -188,7 +188,7 @@ PSD. Explain the factor 1.44.
 
 ## Step 2 – Digital filters and the simulator
 
-### What we did and why
+### What I did and why
 A zero-phase band-pass (`epidetect.filters`) and a simulator with exact ground truth
 (`epidetect.simulate`), **calibrated on the real data**
 (`scripts/03_calibrate_simulator.py`). Then a deterministic demonstration of why a filtered
@@ -257,7 +257,7 @@ envelope. Relate the result to 1 / bandwidth.
 
 ## Step 3 – The three detectors
 
-### What we did and why
+### What I did and why
 Three families of detectors, all returning the same table (`onset_s, offset_s, peak_s, band,
 freq_hz, score`), plus the one-to-one matching used to label and evaluate them.
 
@@ -315,7 +315,7 @@ Then add 50 HFOs riding on spikes and explain what happens.
 
 ## Step 4 – Evaluation on simulations and on real data
 
-### What we did and why
+### What I did and why
 - **Simulations**: 5 SNR levels × (4 training + 10 test channels of 120 s), disjoint seeds.
   Thresholds are tuned on the training channels, and test metrics come with bootstrap CIs over
   test channels.
@@ -383,7 +383,7 @@ patient 06 and recompute the micro F1. Explain the difference.
 
 ## Step 4b – Hybrid simulation
 
-### What we did and why
+### What I did and why
 Strategy C: in each fold, synthetic fast ripples are inserted into real background windows
 (30 s, without marked FR) of the **training patients only**. Their properties are calibrated on
 the training patients' markings:
@@ -420,7 +420,7 @@ and check whether the ML detector trained on hybrid data improves, without leaka
 
 ## Step 5 – Clinical analysis
 
-### What we did and why
+### What I did and why
 For each patient, the post-resection FR rate (per channel-minute), computed with the reference
 markings and with each detector. Each detector was tuned without that patient, on
 pre-resection FR markings only; the outcome is never used for tuning. The rate is compared with
@@ -449,7 +449,7 @@ auc = u / (n_pos * n_neg)
 
 - The rule "at least one reference FR after resection" has sensitivity 6/8 (0.75) and
   specificity 10/14 (0.71).
-- The reference reproduces the original publication. Our detectors do not, because their false
+- The reference reproduces the original publication. My detectors do not, because their false
   positives in seizure-free patients drown the signal.
 - The channel-level analysis is implemented but skipped (no labels).
 
