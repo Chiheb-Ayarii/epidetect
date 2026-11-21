@@ -14,14 +14,14 @@ from epidetect.qc import robust_std
 FR_BAND_NAME = "fast_ripple"
 
 
-def channel_table(cfg: dict[str, Any]) -> pd.DataFrame:
-    """Pre-resection channels to analyse, with their QC flag.
+def channel_table(cfg: dict[str, Any], session: str = "pre") -> pd.DataFrame:
+    """Channels of one session (``"pre"`` or ``"post"``) to analyse, with their QC flag.
 
     Excluded recordings are skipped. Channels with repeated samples (effective sampling rate
     below fs, e.g. P22 3-4) cannot carry fast ripples and are dropped.
     """
     qc = pd.read_csv(cfg["paths"]["results_dir"] / "qc_channels.csv", dtype={"patient": str})
-    qc = qc[(qc.session == "pre") & ~qc.excluded_recording]
+    qc = qc[(qc.session == session) & ~qc.excluded_recording]
     unusable = qc.reasons.fillna("").str.contains("repeated samples")
     return qc.loc[~unusable, ["patient", "channel", "bad"]].reset_index(drop=True)
 
@@ -35,10 +35,14 @@ def marking_reference(markings: pd.DataFrame, channel: str) -> pd.DataFrame:
 
 
 def analyse_patient(
-    cfg: dict[str, Any], patient: str, channels: list[str], settings: benchmark.DetectorSettings
+    cfg: dict[str, Any],
+    patient: str,
+    channels: list[str],
+    settings: benchmark.DetectorSettings,
+    session: str = "pre",
 ) -> tuple[benchmark.TrainingUnit, dict[str, float]]:
-    """All detector outputs of one patient's pre-resection channels, and minutes per channel."""
-    raw = io.read_bids_recording(cfg["paths"]["bids_root"], patient, "pre", cfg["bids"]["task"])
+    """All detector outputs of one patient's channels in one session, and minutes per channel."""
+    raw = io.read_bids_recording(cfg["paths"]["bids_root"], patient, session, cfg["bids"]["task"])
     fs = raw.info["sfreq"]
     markings = io.annotations_to_markings(raw)
     per_channel, minutes = {}, {}
@@ -51,15 +55,20 @@ def analyse_patient(
 
 
 def load_real_units(
-    cfg: dict[str, Any], settings: benchmark.DetectorSettings, channels: pd.DataFrame
+    cfg: dict[str, Any],
+    settings: benchmark.DetectorSettings,
+    channels: pd.DataFrame,
+    session: str = "pre",
 ) -> tuple[dict[str, benchmark.TrainingUnit], dict[str, dict[str, float]]]:
     """Cached ``analyse_patient`` for every patient of ``channels``."""
-    cache = benchmark.cache_dir(cfg, "real")
+    cache = benchmark.cache_dir(cfg, "real" if session == "pre" else f"real-{session}")
     units, minutes = {}, {}
     for patient, group in channels.groupby("patient"):
         units[patient], minutes[patient] = benchmark.load_or_compute(
             cache / f"{patient}.pkl",
-            lambda p=patient, g=group: analyse_patient(cfg, p, g.channel.tolist(), settings),
+            lambda p=patient, g=group: analyse_patient(
+                cfg, p, g.channel.tolist(), settings, session
+            ),
         )
     return units, minutes
 
