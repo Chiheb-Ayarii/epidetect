@@ -75,7 +75,7 @@ recordings are duplicated, and one channel was effectively sampled at 1000 Hz.
 ```powershell
 git clone <this repository> ; cd epidetect
 .\run.ps1 setup       # .venv + pinned dependencies (requirements.txt) + package
-.\run.ps1 run         # scripts/00 ... 14 in order; about 2 h without cache
+.\run.ps1 run         # scripts/00 ... 14 in order (long without cache, see the table)
 .\run.ps1 notebooks   # re-execute notebooks/01 ... 05
 .\run.ps1 test        # 87 unit tests (no real data needed)
 .\run.ps1 lint        # ruff check + format check

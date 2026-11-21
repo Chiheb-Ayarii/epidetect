@@ -63,7 +63,7 @@ results transfer to real data.
 
 ```powershell
 .\run.ps1 setup       # .venv + pinned dependencies
-.\run.ps1 run         # scripts/00 ... 13, in order (about 2 h without cache)
+.\run.ps1 run         # scripts/00 ... 14, in order (long without cache)
 .\run.ps1 notebooks   # re-executes notebooks/01 ... 05
 .\run.ps1 test        # 87 tests, no real data needed
 ```
