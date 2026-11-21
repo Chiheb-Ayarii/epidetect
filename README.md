@@ -130,6 +130,20 @@ This section is completed at every step; the final README discusses each point w
   classifier also needs realistic positive examples. The inserted Hann-windowed sinusoids are
   cleaner than real FRs, and unmarked real FRs in the "background" are learned as negatives
   (`results/strategy_comparison.csv`).
+**Clinical analysis** (exploratory: 22 patients, 8 not seizure-free)
+- With the reference markings, the post-resection FR rate predicts a poor outcome: AUC 0.83
+  [0.62, 1.00], permutation p = 0.004. This reproduces the original publication's finding on
+  the public data. The files do not say whether the markings were made blind to the outcome.
+- With our three detectors, post-resection rates do not predict the outcome (AUC 0.40–0.61,
+  every CI includes 0.5; `results/clinical_auc.csv`). Their false positives in seizure-free
+  patients drown the signal, so a detector agreeing with the reference at macro F1 ≈ 0.2 is
+  not clinically usable as it is.
+- Confidence intervals come from a stratified bootstrap over 22 patients and are approximate.
+  Their upper bound reaches 1.
+- Channel-level analysis (FR rate vs resected channels) is implemented but not run: no
+  channel-level resection labels exist.
+
+**Data dominance**
 - A single patient dominates the dataset statistics: without patient 06, the calibrated FR
   rate drops from 2.5 to 1.1 per channel-minute and the share on spikes from 62 % to 39 %
   (`results/hybrid_fold_calibration.csv`).
