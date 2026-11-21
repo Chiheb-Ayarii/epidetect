@@ -24,12 +24,13 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupKFold
 
-from epidetect import evaluate
+from epidetect import evaluate, simulate
 from epidetect.detectors.base import bands_from_config
 from epidetect.detectors.energy import EnergyParams, detect_energy
 from epidetect.detectors.ml import MLDetector, MLParams, label_candidates
 from epidetect.detectors.wavelet import WaveletParams, detect_wavelet
 from epidetect.features import FEATURE_NAMES
+from epidetect.simulate import SimulationParams
 
 
 @dataclass(frozen=True)
@@ -314,3 +315,76 @@ def load_or_compute(path: Path, compute: Callable[[], Any]) -> Any:
     with path.open("wb") as f:
         pickle.dump(result, f)
     return result
+
+
+# --- Simulation units and metric summaries ----------------------------------------------------
+
+
+@dataclass(frozen=True)
+class SimulatedUnit:
+    """One simulated channel: its ground truth, analysed duration and per-band units."""
+
+    seed: int
+    truth: pd.DataFrame
+    minutes: float
+    units: dict[str, TrainingUnit]
+
+
+def simulated_units(
+    params: SimulationParams,
+    seeds: Sequence[int],
+    settings: DetectorSettings,
+    cache: Path,
+    tag: str,
+) -> list[SimulatedUnit]:
+    """Simulate and analyse one channel per seed (cached under ``cache/<tag>-<seed>.pkl``)."""
+    out = []
+    for seed in seeds:
+
+        def compute(seed: int = seed) -> SimulatedUnit:
+            sim = simulate.simulate_from_seed(params, seed)
+            analysed = analyse_signal(sim.signal_uv, sim.fs, sim.events, settings)
+            minutes = (params.duration_s - 2 * settings.edge_margin_s) / 60
+            units = {b: merge_channels({"sim": analysed[b]}, str(seed)) for b in settings.bands}
+            return SimulatedUnit(seed, sim.events, minutes, units)
+
+        out.append(load_or_compute(cache / f"{tag}-{seed}.pkl", compute))
+    return out
+
+
+METRICS: dict[str, Callable[[pd.DataFrame], float]] = {
+    "precision": evaluate.pooled("precision"),
+    "recall": evaluate.pooled("recall"),
+    "f1": evaluate.pooled("f1"),
+    "recall_isolated": evaluate.ratio("tp_isolated", "n_isolated"),
+    "recall_on_spike": evaluate.ratio("tp_on_spike", "n_on_spike"),
+    "spike_false_alarm_rate": evaluate.ratio("spikes_hit", "n_spikes"),
+    "fp_per_min": evaluate.ratio("fp", "minutes"),
+}
+
+
+def summarise(
+    counts: pd.DataFrame,
+    by: list[str],
+    metrics: dict[str, Callable[[pd.DataFrame], float]],
+    n_boot: int,
+    level: float,
+    seed: int,
+) -> pd.DataFrame:
+    """Estimate and bootstrap CI of each metric, for each group of ``by`` (rows = units)."""
+    rows = []
+    for keys, group in counts.groupby(by, sort=False):
+        keys = keys if isinstance(keys, tuple) else (keys,)
+        for name, statistic in metrics.items():
+            estimate, low, high = evaluate.bootstrap_ci(group, statistic, n_boot, level, seed)
+            rows.append(
+                {
+                    **dict(zip(by, keys, strict=True)),
+                    "metric": name,
+                    "estimate": estimate,
+                    "ci_low": low,
+                    "ci_high": high,
+                    "n_units": len(group),
+                }
+            )
+    return pd.DataFrame(rows)
