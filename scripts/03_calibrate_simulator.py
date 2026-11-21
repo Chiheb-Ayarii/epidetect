@@ -21,7 +21,8 @@ Outputs:
     results/background_fit.csv            one row per channel
     results/background_fit_summary.csv    medians and fractions quoted in the docs
     results/spike_ringing_real.csv        one row per real transient
-    results/spike_apex_grid.csv           distance to the real quantiles for each candidate range
+    results/spike_apex_grid.csv           simulated quantiles and distance to the real ones,
+                                          for each candidate range
     results/spike_calibration_summary.csv real vs simulated quantiles of the ringing ratio
     figures/sim_background_calibration.png
     figures/sim_spike_calibration.png
@@ -278,18 +279,28 @@ def log_quantile_distance(a: np.ndarray, b: np.ndarray) -> float:
 def search_apex_range(
     params: SimulationParams, real: np.ndarray, seed: int, cal: dict
 ) -> pd.DataFrame:
-    """Distance to the real ringing quantiles for every candidate (low, high) apex range."""
+    """Distance to the real ringing quantiles for every candidate (low, high) apex range.
+
+    The simulated quantiles of every candidate are saved too (``sim_q10`` ... ``sim_q90``): they
+    do not depend on any patient, so a leave-one-patient-out recalibration only needs to
+    recompute the real quantiles without the test patient (scripts/10_evaluate_real.py).
+    """
     rows = []
     for low in cal["apex_low_grid_ms"]:
         for high in cal["apex_high_grid_ms"]:
             if high < low:
                 continue
             sim = simulated_ringing(params, (low, high), seed, cal)
+            quantiles = np.quantile(sim, RINGING_QUANTILES)
             rows.append(
                 {
                     "apex_low_ms": low,
                     "apex_high_ms": high,
                     "distance_log10": log_quantile_distance(sim, real),
+                    **{
+                        f"sim_q{int(q * 100)}": v
+                        for q, v in zip(RINGING_QUANTILES, quantiles, strict=True)
+                    },
                 }
             )
     return pd.DataFrame(rows).sort_values("distance_log10", ignore_index=True)
