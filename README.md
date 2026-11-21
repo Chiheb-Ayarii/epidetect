@@ -299,13 +299,14 @@ epidetect/
 ├── tests/                        # 87 pytest tests (no real data needed)
 ├── results/                      # small result tables (CSV)
 ├── figures/                      # all figures (PNG)
-└── docs/                         # data notes, walkthrough, PDFs
+└── docs/                         # data notes, walkthrough (Markdown and PDF)
 ```
 
 ## Documentation
 
 - [docs/DATA_NOTES.md](docs/DATA_NOTES.md): the dataset, its format and its anomalies.
-- [docs/PROJECT_WALKTHROUGH.md](docs/PROJECT_WALKTHROUGH.md): step-by-step account of the project.
+- [docs/PROJECT_WALKTHROUGH.md](docs/PROJECT_WALKTHROUGH.md): step-by-step account of the project
+  ([PDF version](docs/PROJECT_WALKTHROUGH.pdf)).
 
 ## What I learned
 

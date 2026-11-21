@@ -1,7 +1,26 @@
-"""Build the PDF documents from the Markdown sources (markdown + xhtml2pdf, no LaTeX).
+"""Build PDF documents from the Markdown sources (markdown + xhtml2pdf, no LaTeX).
 
-Output (in docs/):
-    PROJECT_WALKTHROUGH.pdf
+Public output:
+    docs/PROJECT_WALKTHROUGH.pdf
+
+Optional local documents: if ``docs/local_documents.toml`` exists (it is git-ignored), the
+documents it lists are built too. Two kinds are supported:
+
+    [[document]]                    # one Markdown file -> one PDF
+    kind = "markdown"
+    source = "docs/SOME_NOTES.md"
+    output = "docs/SOME_NOTES.pdf"
+    footer = "EpiDetect - Notes"
+
+    [[document]]                    # a guide: title page, table of contents, walkthrough,
+    kind = "guide"                  # key results and figures, limitations and future work,
+    output = "docs/GUIDE.pdf"       # the extra parts listed below, data notes in appendix
+    footer = "EpiDetect - Guide"
+    subtitle = "..."
+    author = "..."
+    [[document.extra_parts]]
+    heading = "Part 4 - ..."
+    source = "docs/SOME_NOTES.md"
 
 Fonts: DejaVu Sans / Sans Mono shipped with Matplotlib (Greek letters, arrows and maths symbols
 render on every machine without downloading anything).
@@ -13,7 +32,9 @@ Usage:
 from __future__ import annotations
 
 import re
+import tomllib
 from pathlib import Path
+from typing import Any
 
 import markdown
 import matplotlib
@@ -23,6 +44,7 @@ REPO = Path(__file__).resolve().parents[1]
 DOCS, FIGURES, RESULTS = REPO / "docs", REPO / "figures", REPO / "results"
 FONTS = Path(matplotlib.get_data_path()) / "fonts" / "ttf"
 EXTENSIONS = ["tables", "fenced_code", "sane_lists"]
+LOCAL_DOCUMENTS = DOCS / "local_documents.toml"  # optional, git-ignored
 KEY_FIGURES = [
     (
         "false_hfo_demo.png",
@@ -133,9 +155,58 @@ def figures_html() -> str:
     return "".join(parts)
 
 
+def read(path: str | Path) -> str:
+    return (REPO / path).read_text(encoding="utf-8")
+
+
+def build_markdown(doc: dict[str, Any]) -> None:
+    """One Markdown file rendered as one PDF."""
+    render(md_to_html(read(doc["source"])), REPO / doc["output"], doc["footer"])
+
+
+def build_guide(doc: dict[str, Any]) -> None:
+    """Title page, table of contents, walkthrough, results, limitations, extra parts, appendix."""
+    body = (
+        "<div class='title'><h1>EpiDetect</h1>"
+        "<p class='subtitle'>A reproducible benchmark of high-frequency oscillation detectors"
+        f"<br/>{doc.get('subtitle', '')}</p><p>{doc.get('author', '')}</p></div>"
+        "<pdf:nextpage/><h1>Table of contents</h1><pdf:toc/><pdf:nextpage/>"
+        "<h1>Part 1 – Project walkthrough</h1>"
+        + md_to_html(read("docs/PROJECT_WALKTHROUGH.md"), shift=1)
+        + "<pdf:nextpage/><h1>Part 2 – Key results</h1>"
+        + "<p>Tables written by scripts/14_results_summary.py from the result files.</p>"
+        + md_to_html(read("results/summary_tables.md"))
+        + "<h2>Main findings</h2>"
+        + md_to_html(readme_section("Main findings"))
+        + "<h2>Key figures</h2>"
+        + figures_html()
+        + "<pdf:nextpage/><h1>Part 3 – Limitations and future work</h1>"
+        + md_to_html(readme_section("Limitations"))
+        + "<h2>Future work</h2>"
+        + md_to_html(readme_section("Future work"))
+    )
+    for part in doc.get("extra_parts", []):
+        body += f"<pdf:nextpage/><h1>{part['heading']}</h1>" + md_to_html(
+            read(part["source"]), shift=1
+        )
+    body += "<pdf:nextpage/><h1>Appendix – Data notes</h1>" + md_to_html(
+        read("docs/DATA_NOTES.md"), shift=1
+    )
+    render(body, REPO / doc["output"], doc["footer"])
+
+
 def main() -> None:
-    walkthrough = (DOCS / "PROJECT_WALKTHROUGH.md").read_text(encoding="utf-8")
-    render(md_to_html(walkthrough), DOCS / "PROJECT_WALKTHROUGH.pdf", "EpiDetect – Walkthrough")
+    render(
+        md_to_html(read("docs/PROJECT_WALKTHROUGH.md")),
+        DOCS / "PROJECT_WALKTHROUGH.pdf",
+        "EpiDetect – Walkthrough",
+    )
+    if not LOCAL_DOCUMENTS.exists():
+        return
+    builders = {"markdown": build_markdown, "guide": build_guide}
+    with LOCAL_DOCUMENTS.open("rb") as f:
+        for doc in tomllib.load(f).get("document", []):
+            builders[doc["kind"]](doc)
 
 
 if __name__ == "__main__":
