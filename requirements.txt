@@ -10,7 +10,7 @@ matplotlib==3.11.2
 PyWavelets==1.9.0
 h5py==3.16.0
 pybv==0.8.1
-# Notebooks are executed programmatically (scripts/build_notebooks.py).
+# Notebooks are executed programmatically (scripts/run_notebooks.py).
 nbformat==5.11.1
 nbclient==0.11.0
 ipykernel==7.4.0

@@ -44,6 +44,7 @@ switch ($Task) {
     "inventory" { Invoke-Inventory }
     "run"       { Invoke-Run }
     "notebooks" { Invoke-Py (Join-Path $PSScriptRoot "scripts\run_notebooks.py") }
+    "pdf"       { Invoke-Py (Join-Path $PSScriptRoot "scripts\build_pdfs.py") }
     "test"      { Invoke-Py -m pytest }
     "lint"      { Invoke-Py -m ruff check src tests scripts; Invoke-Py -m ruff format --check src tests scripts }
     "format"    { Invoke-Py -m ruff format src tests scripts }
