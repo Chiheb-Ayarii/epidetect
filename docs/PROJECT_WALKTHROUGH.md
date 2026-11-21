@@ -484,7 +484,7 @@ Recompute the AUC of the reference rate by hand from the 8 × 14 pairs in
   power in its band, in dB.
 - **1/f background**: brain background whose power decreases as 1/f^β.
 - **Amplifier floor**: the white electronic noise visible above about 260 Hz.
-- **Envelope (Hilbert)**: the instantaneous amplitude |x + i·𝓗{x}| of a narrow-band signal.
+- **Envelope (Hilbert)**: the instantaneous amplitude |x + i·H{x}| of a narrow-band signal.
 - **Line length**: Σ|x[n] − x[n−1]|, the length of the curve; sensitive to amplitude and
   frequency.
 - **Morlet wavelet**: a complex sinusoid in a Gaussian window with a fixed number of cycles; a
