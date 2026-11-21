@@ -107,3 +107,15 @@ def test_band_without_positives_gets_no_model() -> None:
     detector = MLDetector(BANDS, SMALL_FOREST).fit_table(table)
     assert detector.models == {}
     assert detector.detections_from_table(table.drop(columns="label")).empty
+
+
+def test_feature_subset_for_ablation() -> None:
+    names = tuple(n for n in FEATURE_NAMES if n != "freq_hz")
+    table = pd.DataFrame([candidate(1.0, 1.02, "ripple")] * 6)
+    for name in FEATURE_NAMES:
+        table[name] = np.arange(6.0)
+    table["label"] = [0, 0, 0, 1, 1, 1]
+    detector = MLDetector(BANDS, SMALL_FOREST, feature_names=names).fit_table(table)
+    assert list(detector.feature_importances().index) == list(names)
+    with pytest.raises(ValueError, match="Unknown"):
+        MLDetector(BANDS, feature_names=("not_a_feature",))

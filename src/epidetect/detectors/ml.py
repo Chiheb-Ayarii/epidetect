@@ -115,7 +115,13 @@ class MLDetector:
         energy: EnergyParams | None = None,
         wavelet: WaveletParams | None = None,
         edge_margin_s: float = 1.0,
+        feature_names: tuple[str, ...] = tuple(FEATURE_NAMES),
     ) -> None:
+        """``feature_names`` selects the features used by the forests (ablation studies)."""
+        unknown = set(feature_names) - set(FEATURE_NAMES)
+        if unknown:
+            raise ValueError(f"Unknown features: {sorted(unknown)}")
+        self.feature_names = tuple(feature_names)
         self.bands = bands
         self.params = params or MLParams()
         self.energy = energy
@@ -154,7 +160,7 @@ class MLDetector:
                 random_state=self.params.random_state,
                 n_jobs=-1,
             )
-            model.fit(_feature_matrix(group), group["label"].to_numpy())
+            model.fit(_feature_matrix(group, self.feature_names), group["label"].to_numpy())
             self.models[str(band)] = model
         return self
 
@@ -172,7 +178,8 @@ class MLDetector:
         for band, model in self.models.items():
             rows = scored["band"] == band
             if rows.any():
-                scored.loc[rows, "score"] = model.predict_proba(_feature_matrix(scored[rows]))[:, 1]
+                features = _feature_matrix(scored[rows], self.feature_names)
+                scored.loc[rows, "score"] = model.predict_proba(features)[:, 1]
         return scored
 
     def detections_from_table(self, table: pd.DataFrame) -> pd.DataFrame:
@@ -190,11 +197,12 @@ class MLDetector:
     def feature_importances(self) -> pd.DataFrame:
         """Impurity-based importances, one column per band."""
         return pd.DataFrame(
-            {band: m.feature_importances_ for band, m in self.models.items()}, index=FEATURE_NAMES
+            {band: m.feature_importances_ for band, m in self.models.items()},
+            index=list(self.feature_names),
         )
 
 
-def _feature_matrix(table: pd.DataFrame) -> np.ndarray:
+def _feature_matrix(table: pd.DataFrame, names: tuple[str, ...]) -> np.ndarray:
     """Feature columns as a float matrix; missing time-frequency values become -1 (a value
     that cannot occur for a ratio of z-scores near a peak, so the forest can isolate it)."""
-    return table[FEATURE_NAMES].astype(float).fillna(-1.0).to_numpy()
+    return table[list(names)].astype(float).fillna(-1.0).to_numpy()
