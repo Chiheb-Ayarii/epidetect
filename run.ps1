@@ -1,5 +1,5 @@
 # Task runner for Windows PowerShell (replaces a Makefile).
-# Usage:  .\run.ps1 setup | inventory | run | notebooks | test | lint | format | clean
+# Usage:  .\run.ps1 setup | inventory | run | notebooks | pdf | test | lint | format | clean
 param([Parameter(Position = 0)][string]$Task = "help")
 
 $ErrorActionPreference = "Stop"
@@ -51,5 +51,5 @@ switch ($Task) {
         Get-ChildItem $PSScriptRoot -Recurse -Directory -Include "__pycache__", ".pytest_cache", ".ruff_cache" |
             Where-Object { $_.FullName -notlike "*\.venv\*" } | Remove-Item -Recurse -Force
     }
-    default     { Write-Host "Usage: .\run.ps1 setup | inventory | run | notebooks | test | lint | format | clean" }
+    default     { Write-Host "Usage: .\run.ps1 setup | inventory | run | notebooks | pdf | test | lint | format | clean" }
 }
