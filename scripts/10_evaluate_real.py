@@ -12,7 +12,7 @@ For each test patient p, two strategies choose the thresholds and train the ML f
   out-of-fold predictions (GroupKFold over patients).
 * **B - simulations**: the simulator is **recalibrated without p** (background spectrum, 1/f
   exponents, amplitude and spike-apex range recomputed from the other patients' channels and
-  transients), training simulations are generated with it, and everything is tuned on them.
+  transients), training simulations are produced with it, and everything is tuned on them.
 
 The test patient is scored channel by channel (detections never match across channels).
 Patients without reference FRs only contribute false positives per minute. Summary statistics
