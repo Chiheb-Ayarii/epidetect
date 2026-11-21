@@ -1,0 +1,2 @@
+sensitivity,sensitivity_low,sensitivity_high,sensitivity_n,specificity,specificity_low,specificity_high,specificity_n,ppv,ppv_low,ppv_high,ppv_n,npv,npv_low,npv_high,npv_n
+0.75,0.4093,0.9285,8,0.7143,0.4535,0.8828,14,0.6,0.3127,0.8318,10,0.8333,0.552,0.953,12

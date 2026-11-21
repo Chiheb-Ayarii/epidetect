@@ -1,0 +1,9 @@
+analysis,score,auc,ci_low,ci_high,p_permutation,n_not_seizure_free,n_seizure_free
+all channels,reference,0.8304,0.6205,1.0,0.0039,8,14
+all channels,energy,0.4464,0.2097,0.6964,0.701,8,14
+all channels,wavelet,0.6116,0.3616,0.8393,0.4114,8,14
+all channels,ml,0.4018,0.1786,0.6385,0.4545,8,14
+QC-clean channels,reference,0.8393,0.6429,1.0,0.0015,8,14
+QC-clean channels,energy,0.4911,0.25,0.7411,0.9739,8,14
+QC-clean channels,wavelet,0.625,0.3838,0.8482,0.363,8,14
+QC-clean channels,ml,0.4018,0.1786,0.6384,0.4346,8,14
